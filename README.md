@@ -1,0 +1,1 @@
+# Co-Attention Based Interactive Transformer for Antibody-Antigen Binding Classification
