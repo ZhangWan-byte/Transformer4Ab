@@ -169,6 +169,64 @@ class InteractCoattnTransformer(nn.Module):
         return x
 
 
+class InteractCoattn_noTransformer(nn.Module):
+    def __init__(self, embed_size=64, seq_length=128):
+        super(InteractCoattn_noTransformer, self).__init__()
+        
+        self.embedding = nn.Embedding(23, embed_size)
+        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
+        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
+                
+        self.co_attn = CoAttention(embed_size=embed_size, output_size=embed_size)
+
+        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                 nn.Linear(embed_size//2, 1))
+        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                 nn.Linear(embed_size//2, 1))
+        
+        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                          nn.Linear(seq_length//2, 1), nn.Sigmoid())
+    
+    def forward(self, para, epi):
+        
+        # paratope
+        para = self.embedding(para)
+        # (batch, seq_length, embed_size)
+
+        # epitope
+        epi = self.embedding(epi)
+        # (batch, seq_length, embed_size)
+
+
+        # co-attention
+        # print(para.shape, epi.shape)
+        para, epi = self.co_attn(para, epi)
+
+
+        # paratope
+        para = self.transformer_para(para, para)
+        # (batch, seq_length, embed_size)
+        para = self.MLP_para(para)
+        # (batch, seq_length, 1)
+        para = para.squeeze(2)
+        # (batch, seq_length)
+
+
+        # epitope
+        epi = self.transformer_epi(epi, epi)        
+        # (batch, seq_length, embed_size)
+        epi = self.MLP_epi(epi)
+        # (batch, seq_length, 1)
+        epi = epi.squeeze(2)
+        # (batch, seq_length)
+
+        x = para * epi
+        
+        x = self.output_layer(x)
+        
+        return x
+
+
 if __name__ == "__main__":
     k_iter = 0
 
