@@ -13,17 +13,17 @@ class InteractTransformer(nn.Module):
         self.embedding = nn.Embedding(23, embed_size)
 
         self.Linear_para = nn.Sequential(nn.Linear(para_seq_length, hidden), nn.LeakyReLU(), nn.Dropout(0.1), \
-                                         nn.Linear(hidden, hidden), nn.LeakyReLU(), nn.Dropout(0.1))
+                                         nn.Linear(hidden, hidden), nn.LeakyReLU())
         self.Linear_epi = nn.Sequential(nn.Linear(epi_seq_length, hidden), nn.LeakyReLU(), nn.Dropout(0.1), \
-                                        nn.Linear(hidden, hidden), nn.LeakyReLU(), nn.Dropout(0.1))
+                                        nn.Linear(hidden, hidden), nn.LeakyReLU())
 
-        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
-        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
+        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=512, dropout=0.1)
+        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=512, dropout=0.1)
 
         self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
-                                 nn.Linear(embed_size//2, 1))
+                                      nn.Linear(embed_size//2, 1), nn.LeakyReLU())
         self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
-                                 nn.Linear(embed_size//2, 1))
+                                     nn.Linear(embed_size//2, 1), nn.LeakyReLU())
         
         self.output_layer = nn.Sequential(nn.Linear(hidden, hidden//2), nn.LeakyReLU(), nn.Dropout(0.1), \
                                           nn.Linear(hidden//2, 1), nn.Sigmoid())
