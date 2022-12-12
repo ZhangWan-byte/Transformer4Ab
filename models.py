@@ -46,12 +46,10 @@ class InteractTransformer(nn.Module):
         
         # epitope
         epi = self.embedding(epi)
-        print(epi.shape)
         # (batch, epi_seq_length, embed_size)
         epi = epi.permute(0,2,1)
         epi = self.Linear_epi(epi)
         epi = epi.permute(0,2,1)
-        print(epi.shape)
         # (batch, hidden, embed_size)
         epi = self.transformer_epi(epi, epi)        
         # (batch, hidden, embed_size)
