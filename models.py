@@ -7,10 +7,16 @@ from utils import *
 
 
 class InteractTransformer(nn.Module):
-    def __init__(self, embed_size=64, seq_length=128):
+    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128):
         super(InteractTransformer, self).__init__()
         
         self.embedding = nn.Embedding(23, embed_size)
+
+        self.Linear_para = nn.Sequential(nn.Linear(para_seq_length, hidden), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                         nn.Linear(hidden, hidden), nn.LeakyReLU(), nn.Dropout(0.1))
+        self.Linear_epi = nn.Sequential(nn.Linear(epi_seq_length, hidden), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                        nn.Linear(hidden, hidden), nn.LeakyReLU(), nn.Dropout(0.1))
+
         self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
         self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
 
@@ -19,30 +25,38 @@ class InteractTransformer(nn.Module):
         self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
                                  nn.Linear(embed_size//2, 1))
         
-        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
-                                          nn.Linear(seq_length//2, 1), nn.Sigmoid())
+        self.output_layer = nn.Sequential(nn.Linear(hidden, hidden//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                          nn.Linear(hidden//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
         
         # paratope
         para = self.embedding(para)
         # (batch, seq_length, embed_size)
+        para = para.permute(0,2,1)
+        para = self.Linear_para(para)
+        para = para.permute(0,2,1)
+        # (batch, hidden, embed_size)
         para = self.transformer_para(para, para)        
-        # (batch, seq_length, embed_size)
+        # (batch, hidden, embed_size)
         para = self.MLP_para(para)
-        # (batch, seq_length, 1)
+        # (batch, hidden, 1)
         para = para.squeeze(2)
-        # (batch, seq_length)
+        # (batch, hidden)
         
         # epitope
         epi = self.embedding(epi)
         # (batch, seq_length, embed_size)
+        epi = epi.permute(0,2,1)
+        epi = self.Linear_epi(epi)
+        epi = epi.permute(0,2,1)
+        # (batch, hidden, embed_size)
         epi = self.transformer_epi(epi, epi)        
-        # (batch, seq_length, embed_size)
+        # (batch, hidden, embed_size)
         epi = self.MLP_epi(epi)
-        # (batch, seq_length, 1)
+        # (batch, hidden, 1)
         epi = epi.squeeze(2)
-        # (batch, seq_length)
+        # (batch, hidden)
 
         x = para * epi
         
