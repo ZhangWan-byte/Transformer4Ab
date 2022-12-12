@@ -7,13 +7,17 @@ import pandas as pd
 from utils import *
 
 
-def get_pair(data, seq_length=800):
+def get_pair(data, para_seq_length=128, epi_seq_length=800):
     pair_data = []
 
     for i in range(len(data)):
+        # paratope
         paratope = data[i]["Hseq"][0] + "/" + data[i]["Lseq"][0]
+        paratope = seq_clip(seq=paratope, target_length=para_seq_length)
+
+        # generate positive sample
         antigen_pos = "/".join(data[i]["Aseq"])
-        antigen_pos = seq_clip(seq=antigen_pos, target_length=seq_length)
+        antigen_pos = seq_clip(seq=antigen_pos, target_length=epi_seq_length)
         
         # generate negative sample
         j = random.randint(0,len(data)-1)
@@ -21,7 +25,7 @@ def get_pair(data, seq_length=800):
         while seq_sim(antigen_neg, antigen_pos)>=0.5:
             j = random.randint(0, len(data)-1)
             antigen_neg = "/".join(data[j]["Aseq"])
-        antigen_neg = seq_clip(seq=antigen_neg, target_length=seq_length)
+        antigen_neg = seq_clip(seq=antigen_neg, target_length=epi_seq_length)
         
         # append to pair_data
         pair_data.append((paratope, antigen_pos, 1))
@@ -41,9 +45,6 @@ class SAbDabDataset(torch.utils.data.Dataset):
 
         self.label = torch.Tensor([pair[-1] for pair in self.pair_data])
         self.data = [(to_onehot(pair[0]), to_onehot(pair[1])) for pair in self.pair_data]
-        # self.label = torch.Tensor(self.label)
-        # self.data = [(list(map(to_onehot, self.data[i][0])), list(map(to_onehot, self.data[i][1]))) for i in range(len(self.data))]
-        # self.data = torch.Tensor(list(map(to_onehot, self.data)))
 
         # train data
         self.data_folds = []
