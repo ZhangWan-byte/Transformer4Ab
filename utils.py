@@ -52,6 +52,14 @@ def toOneHot(seq, seq_length=128):
         
     return np.array((li+pad))
 
+def to_onehot(seq):
+    li = []
+
+    for i in range(len(seq)):
+        li.append(vocab[seq[i]])
+
+    return np.array(li)
+
 
 def seq_sim(target, query):
 

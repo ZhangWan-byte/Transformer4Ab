@@ -39,8 +39,11 @@ class SAbDabDataset(torch.utils.data.Dataset):
 
         self.is_train = is_train
 
-        self.label = [pair[-1] for pair in self.pair_data]
-        self.data = [(pair[0], pair[1]) for pair in self.pair_data]
+        self.label = torch.Tensor([pair[-1] for pair in self.pair_data])
+        self.data = [(to_onehot(pair[0]), to_onehot(pair[1])) for pair in self.pair_data]
+        # self.label = torch.Tensor(self.label)
+        # self.data = [(list(map(to_onehot, self.data[i][0])), list(map(to_onehot, self.data[i][1]))) for i in range(len(self.data))]
+        # self.data = torch.Tensor(list(map(to_onehot, self.data)))
 
         # train data
         self.data_folds = []
@@ -72,7 +75,7 @@ class SAbDabDataset(torch.utils.data.Dataset):
         
 # CoV-AbDab
 class SeqDataset(torch.utils.data.Dataset):
-    def __init__(self, data_path="../../MSAI_Project/codes/data/sequence_pairs.json", seq_length=800):
+    def __init__(self, data_path="../../MSAI_Project/codes/data/sequence_pairs.json", seq_length=800, kfold=10, holdout_fold=0, is_train=True):
         self.data_df = pd.read_csv(data_path)
 #         self.dataset_length = self.data_df.shape[0]
 #         self.label = torch.Tensor(self.data_df["Class"])
@@ -112,9 +115,27 @@ class SeqDataset(torch.utils.data.Dataset):
 
 
 if __name__=="__main__":
+    # SAbDabDataset
+    # data = pickle.load(open("../../MSAI_Project/codes/data/data.json", "rb"))
+    # dataset = SAbDabDataset(data)
+    # dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
+
+    # t=0
+    # for i, (para, epi, label) in enumerate(dataloader):
+    #     print(i)
+    #     print("para", para)
+    #     print("epi", epi)
+    #     print("label", label)
+    #     t += 1
+
+    #     if t==1:
+    #         break
+
+    # SeqDataset
     data = pickle.load(open("../../MSAI_Project/codes/data/data.json", "rb"))
-    dataset = SAbDabDataset(data)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=2, shuffle=False)
+    dataset = SeqDataset(data_path="../data/SARS-SAbDab_Shaun/CoV-AbDab_extract.csv", seq_length=128, \
+                    kfold=10, holdout_fold=0, is_train=True)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
 
     t=0
     for i, (para, epi, label) in enumerate(dataloader):
