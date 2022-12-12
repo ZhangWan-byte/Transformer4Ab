@@ -62,3 +62,17 @@ def seq_sim(target, query):
     score = score / max(len(target), len(query))
     
     return score
+
+
+def seq_clip(seq, target_length=800):
+    
+    if len(seq) <= target_length:
+        subseq = seq + "#" * (target_length - len(seq))
+        return subseq
+    else:
+        subseq = ""
+        for i in range(len(seq)):
+            if random.random() <= target_length/len(seq):
+                subseq += seq[i]
+        return subseq
+
