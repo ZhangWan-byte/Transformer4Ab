@@ -78,9 +78,13 @@ def seq_clip(seq, target_length=800):
         subseq = seq + "#" * (target_length - len(seq))
         return subseq
     else:
-        subseq = ""
-        for i in range(len(seq)):
-            if random.random() <= target_length/len(seq):
-                subseq += seq[i]
+        seq = [(i, seq[i]) for i in range(len(seq))]
+        subseq = random.sample(seq, target_length)
+        subseq = sorted(subseq, key=lambda x:x[0])
+        subseq = "".join([subseq[i][1] for i in range(len(subseq))])
+        # subseq = ""
+        # for i in range(len(seq)):
+        #     if random.random() <= target_length/len(seq):
+        #         subseq += seq[i]
         return subseq
 

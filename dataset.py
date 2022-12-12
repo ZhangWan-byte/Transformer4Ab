@@ -37,7 +37,7 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800):
 # SAbDab
 class SAbDabDataset(torch.utils.data.Dataset):
     def __init__(self, data, para_seq_length=128, epi_seq_length=800, kfold=10, holdout_fold=0, is_train=True, is_shuffle=True):
-        self.pair_data = get_pair(data, para_seq_length=128, epi_seq_length=800)
+        self.pair_data = get_pair(data, para_seq_length=para_seq_length, epi_seq_length=epi_seq_length)
         if is_shuffle==True:
             random.shuffle(self.pair_data)
 
