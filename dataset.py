@@ -39,27 +39,28 @@ class SAbDabDataset(torch.utils.data.Dataset):
     def __init__(self, data, para_seq_length=128, epi_seq_length=800, kfold=10, holdout_fold=0, is_train=True, is_shuffle=True):
         self.pair_data = get_pair(data, para_seq_length=para_seq_length, epi_seq_length=epi_seq_length)
         if is_shuffle==True:
+            random.seed(42)
             random.shuffle(self.pair_data)
 
         self.is_train = is_train
 
         self.label = torch.Tensor([pair[-1] for pair in self.pair_data])
-        self.data = [(to_onehot(pair[0]), to_onehot(pair[1])) for pair in self.pair_data]
+        self.data = torch.Tensor([[to_onehot(pair[0]), to_onehot(pair[1])] for pair in self.pair_data])
 
         # train data
         self.data_folds = []
         self.label_folds = []
         for k in range(kfold):
-            data_tmp = self.data[k*int(0.1*len(self.data)):(k+1)*int(0.1*len(self.data))]
-            label_tmp = self.label[k*int(0.1*len(self.label)):(k+1)*int(0.1*len(self.label))]
-            self.data_folds.extend(data_tmp)
-            self.label_folds.extend(label_tmp)
+            data_tmp = self.data[k*int((1/kfold)*len(self.data)):(k+1)*int((1/kfold)*len(self.data)), :, :]
+            label_tmp = self.label[k*int((1/kfold)*len(self.label)):(k+1)*int((1/kfold)*len(self.label))]
+            self.data_folds.append(data_tmp)
+            self.label_folds.append(label_tmp)
 
         # test data
         self.test_data = self.data_folds.pop(holdout_fold)
         self.test_label = self.label_folds.pop(holdout_fold)
-        self.train_data = self.data_folds
-        self.train_label = self.label_folds
+        self.train_data = torch.vstack(self.data_folds)
+        self.train_label = torch.hstack(self.label_folds)
             
     def __len__(self):
         if self.is_train==True:
