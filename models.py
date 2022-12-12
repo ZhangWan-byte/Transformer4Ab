@@ -10,15 +10,15 @@ class InteractTransformer(nn.Module):
     def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128):
         super(InteractTransformer, self).__init__()
         
-        self.embedding = nn.Embedding(23, embed_size)
+        self.embedding = nn.Embedding(len(vocab), embed_size)
 
         self.Linear_para = nn.Sequential(nn.Linear(para_seq_length, hidden), nn.LeakyReLU(), nn.Dropout(0.1), \
                                          nn.Linear(hidden, hidden), nn.LeakyReLU())
         self.Linear_epi = nn.Sequential(nn.Linear(epi_seq_length, hidden), nn.LeakyReLU(), nn.Dropout(0.1), \
                                         nn.Linear(hidden, hidden), nn.LeakyReLU())
 
-        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=512, dropout=0.1)
-        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=512, dropout=0.1)
+        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=2, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=512, dropout=0.1)
+        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=2, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=512, dropout=0.1)
 
         self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
                                       nn.Linear(embed_size//2, 1), nn.LeakyReLU())
@@ -32,7 +32,7 @@ class InteractTransformer(nn.Module):
         
         # paratope
         para = self.embedding(para)
-        # (batch, seq_length, embed_size)
+        # (batch, para_seq_length, embed_size)
         para = para.permute(0,2,1)
         para = self.Linear_para(para)
         para = para.permute(0,2,1)
@@ -46,10 +46,12 @@ class InteractTransformer(nn.Module):
         
         # epitope
         epi = self.embedding(epi)
-        # (batch, seq_length, embed_size)
+        print(epi.shape)
+        # (batch, epi_seq_length, embed_size)
         epi = epi.permute(0,2,1)
         epi = self.Linear_epi(epi)
         epi = epi.permute(0,2,1)
+        print(epi.shape)
         # (batch, hidden, embed_size)
         epi = self.transformer_epi(epi, epi)        
         # (batch, hidden, embed_size)
@@ -129,7 +131,7 @@ class InteractCoattnTransformer(nn.Module):
     def __init__(self, embed_size=64, seq_length=128):
         super(InteractCoattnTransformer, self).__init__()
         
-        self.embedding = nn.Embedding(23, embed_size)
+        self.embedding = nn.Embedding(len(vocab), embed_size)
         self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
         self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
                 
@@ -187,7 +189,7 @@ class InteractCoattn_noTransformer(nn.Module):
     def __init__(self, embed_size=64, seq_length=128):
         super(InteractCoattn_noTransformer, self).__init__()
         
-        self.embedding = nn.Embedding(23, embed_size)
+        self.embedding = nn.Embedding(len(vocab), embed_size)
         self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
         self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
                 
