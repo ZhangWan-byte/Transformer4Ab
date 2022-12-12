@@ -1,9 +1,12 @@
+import pickle
+import random
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
+from Bio import Align
 
 
 vocab = {
@@ -29,7 +32,10 @@ vocab = {
     'U': 19,
     'V': 20,
     'W': 21,
-    'Y': 22
+    'Y': 22,
+    '*': 23,    # UNK
+    '#': 24,    # PAD
+    '/': 25     # SEP
 }
 
 
@@ -45,3 +51,14 @@ def toOneHot(seq, seq_length=128):
         pad = [vocab["<MASK>"]]*(seq_length-len(li))
         
     return np.array((li+pad))
+
+
+def seq_sim(target, query):
+
+    aligner = Align.PairwiseAligner()
+    aligner = Align.PairwiseAligner(match_score=1.0)
+
+    score = aligner.score(target, query)
+    score = score / max(len(target), len(query))
+    
+    return score
