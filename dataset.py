@@ -22,6 +22,9 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800):
         # generate negative sample
         j = random.randint(0,len(data)-1)
         antigen_neg = "/".join(data[j]["Aseq"])
+        
+        # - BLAST antibody database
+        # - random
         while seq_sim(antigen_neg, antigen_pos)>=0.5:
             j = random.randint(0, len(data)-1)
             antigen_neg = "/".join(data[j]["Aseq"])
