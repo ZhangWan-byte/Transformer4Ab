@@ -8,7 +8,7 @@ import pandas as pd
 from utils import *
 
 
-def get_pair(data, para_seq_length=128, epi_seq_length=800, neg_sample_mode=0):
+def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg_sample_mode=0):
     """process original data to format in pairs
 
     :param data: original data
@@ -22,24 +22,24 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, neg_sample_mode=0):
     for i in range(len(data)):
         # paratope
         paratope = data[i]["Hseq"][0] + "/" + data[i]["Lseq"][0]
-        paratope = seq_clip(seq=paratope, target_length=para_seq_length)
+        paratope = seq_clip(seq=paratope, target_length=para_seq_length, seq_clip_mode=seq_clip_mode)
 
-        # generate positive sample
-        antigen_pos = "/".join(data[i]["Aseq"])
-        antigen_pos = seq_clip(seq=antigen_pos, target_length=epi_seq_length)
-        
-        # generate negative sample
-        # 0 - random sampling
+        # epitope - generate positive sample
+        if seq_clip_mode==0:
+            antigen_pos = "/".join(data[i]["Aseq"])
+            antigen_pos = seq_clip(seq=antigen_pos, target_length=epi_seq_length, seq_clip_mode=seq_clip_mode)
+
+        # epitope - generate negative sample
+        # 0 - random sampling from all epitope seqs
         if neg_sample_mode==0:
             j = random.randint(0,len(data)-1)
             antigen_neg = "/".join(data[j]["Aseq"])
             
-            # - BLAST antibody database
             while seq_sim(antigen_neg, antigen_pos)>=0.5:
                 j = random.randint(0, len(data)-1)
                 antigen_neg = "/".join(data[j]["Aseq"])
-            antigen_neg = seq_clip(seq=antigen_neg, target_length=epi_seq_length)
-        # 1 - random
+            antigen_neg = seq_clip(seq=antigen_neg, target_length=epi_seq_length, seq_clip_mode=seq_clip_mode)
+        # 1 - random sequence
         elif neg_sample_mode==1:
             candidates = "".join([k for k in vocab.keys()])
             antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))

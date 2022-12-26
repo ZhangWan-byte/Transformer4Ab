@@ -71,19 +71,30 @@ def seq_sim(target, query):
     return score
 
 
-def seq_clip(seq, target_length=800):
+def seq_clip(seq, target_length=800, seq_clip_mode=0):
+    """clip sequence to target length
+
+    :param seq: seq
+    :param target_length: target length, defaults to 800
+    :param seq_clip_mode: 0 - random sample / 1 - k nearest amino acids
+    :return: clipped sequence
+    """
     
+    # pad if smaller
     if len(seq) <= target_length:
         subseq = seq + "#" * (target_length - len(seq))
         return subseq
+    # random sample if larger
     else:
-        seq = [(i, seq[i]) for i in range(len(seq))]
-        subseq = random.sample(seq, target_length)
-        subseq = sorted(subseq, key=lambda x:x[0])
-        subseq = "".join([subseq[i][1] for i in range(len(subseq))])
-        # subseq = ""
-        # for i in range(len(seq)):
-        #     if random.random() <= target_length/len(seq):
-        #         subseq += seq[i]
+        if seq_clip_mode==0:
+            seq = [(i, seq[i]) for i in range(len(seq))]
+            subseq = random.sample(seq, target_length)
+            subseq = sorted(subseq, key=lambda x:x[0])
+            subseq = "".join([subseq[i][1] for i in range(len(subseq))])
+        elif seq_clip_mode==1:
+            pass
+        else:
+            pass
+
         return subseq
 
