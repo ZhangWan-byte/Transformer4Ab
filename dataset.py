@@ -2,12 +2,34 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+import random
 import numpy as np
 import pandas as pd
 from utils import *
 
 
-def get_pair(data, para_seq_length=128, epi_seq_length=800):
+def generate_random_seq(target_length=128):
+    """generate random sequence
+
+    :param target_length: sequence length, defaults to 128
+    :return: random sequence
+    """
+    candidates = "".join([k for k in vocab.keys()])
+
+    seq = ''.join(random.choices(candidates, k = target_length))  
+
+    return seq
+
+
+def get_pair(data, para_seq_length=128, epi_seq_length=800, neg_sample_mode=0):
+    """process original data to format in pairs
+
+    :param data: original data
+    :param para_seq_length: paratope sequence length, defaults to 128
+    :param epi_seq_length: epitope sequence length, defaults to 800
+    :param neg_sample_mode: 0-random sampling/ 1-random / choose from BLAST, defaults to 0
+    :return: a list of pair data
+    """
     pair_data = []
 
     for i in range(len(data)):
@@ -20,16 +42,23 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800):
         antigen_pos = seq_clip(seq=antigen_pos, target_length=epi_seq_length)
         
         # generate negative sample
-        j = random.randint(0,len(data)-1)
-        antigen_neg = "/".join(data[j]["Aseq"])
-        
-        # - BLAST antibody database
-        # - random
-        while seq_sim(antigen_neg, antigen_pos)>=0.5:
-            j = random.randint(0, len(data)-1)
+        # 0 - random sampling
+        if neg_sample_mode==0:
+            j = random.randint(0,len(data)-1)
             antigen_neg = "/".join(data[j]["Aseq"])
-        antigen_neg = seq_clip(seq=antigen_neg, target_length=epi_seq_length)
-        
+            
+            # - BLAST antibody database
+            while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                j = random.randint(0, len(data)-1)
+                antigen_neg = "/".join(data[j]["Aseq"])
+            antigen_neg = seq_clip(seq=antigen_neg, target_length=epi_seq_length)
+        # 1 - random
+        elif neg_sample_mode==1:
+            antigen_neg = generate_random_seq(target_length=epi_seq_length)
+        # 2 - BLAST
+        else:
+            pass
+
         # append to pair_data
         pair_data.append((paratope, antigen_pos, 1))
         pair_data.append((paratope, antigen_neg, 0))
