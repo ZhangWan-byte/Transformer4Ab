@@ -12,9 +12,11 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg
     """process original data to format in pairs
 
     :param data: original data
+        ['pdb', 'Hchain', 'Lchain', 'Achain', 'Hseq', 'Lseq', 'Aseq', 'L1', 'L2', 'L3', 'H1', 'H2', 'H3', 'Hpos', 'Lpos', 'Apos']
+        "Apos": [N, CA, C, O]
     :param para_seq_length: paratope sequence length, defaults to 128
     :param epi_seq_length: epitope sequence length, defaults to 800
-    :param neg_sample_mode: 0-random sampling / 1-random / 2-choose from BLAST, defaults to 0
+    :param neg_sample_mode: 0-random sampling from dataset / 1-random sequence / 2-choose from BLAST, defaults to 0
     :return: a list of pair data
     """
     pair_data = []

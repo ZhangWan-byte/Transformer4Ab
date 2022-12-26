@@ -80,21 +80,20 @@ def seq_clip(seq, target_length=800, seq_clip_mode=0):
     :return: clipped sequence
     """
     
-    # pad if smaller
+    # padding if smaller
     if len(seq) <= target_length:
         subseq = seq + "#" * (target_length - len(seq))
         return subseq
-    # random sample if larger
     else:
+        # random sampling if larger
         if seq_clip_mode==0:
             seq = [(i, seq[i]) for i in range(len(seq))]
             subseq = random.sample(seq, target_length)
             subseq = sorted(subseq, key=lambda x:x[0])
             subseq = "".join([subseq[i][1] for i in range(len(subseq))])
-        elif seq_clip_mode==1:
-            pass
-        else:
-            pass
-
+        # k nearest amino acids if larger
+        if seq_clip_mode==1:
+            subseq = get_knn_epitope(seq)
+        
         return subseq
 
