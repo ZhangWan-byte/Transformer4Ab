@@ -8,26 +8,13 @@ import pandas as pd
 from utils import *
 
 
-def generate_random_seq(target_length=128):
-    """generate random sequence
-
-    :param target_length: sequence length, defaults to 128
-    :return: random sequence
-    """
-    candidates = "".join([k for k in vocab.keys()])
-
-    seq = ''.join(random.choices(candidates, k = target_length))  
-
-    return seq
-
-
 def get_pair(data, para_seq_length=128, epi_seq_length=800, neg_sample_mode=0):
     """process original data to format in pairs
 
     :param data: original data
     :param para_seq_length: paratope sequence length, defaults to 128
     :param epi_seq_length: epitope sequence length, defaults to 800
-    :param neg_sample_mode: 0-random sampling/ 1-random / choose from BLAST, defaults to 0
+    :param neg_sample_mode: 0-random sampling / 1-random / 2-choose from BLAST, defaults to 0
     :return: a list of pair data
     """
     pair_data = []
@@ -54,7 +41,8 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, neg_sample_mode=0):
             antigen_neg = seq_clip(seq=antigen_neg, target_length=epi_seq_length)
         # 1 - random
         elif neg_sample_mode==1:
-            antigen_neg = generate_random_seq(target_length=epi_seq_length)
+            candidates = "".join([k for k in vocab.keys()])
+            antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
         # 2 - BLAST
         else:
             pass
