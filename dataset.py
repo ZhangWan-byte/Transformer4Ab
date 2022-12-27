@@ -2,13 +2,17 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+import os
+import pickle
 import random
 import numpy as np
 import pandas as pd
 from utils import *
 
 
-def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg_sample_mode=0):
+def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg_sample_mode=0, \
+    pdb_path="../../MSAI_Project/SAbDab_20221124/all_structures/imgt/"):
+    
     """process original data to format in pairs
 
     :param data: original data
@@ -16,38 +20,53 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg
         "Apos": [N, CA, C, O]
     :param para_seq_length: paratope sequence length, defaults to 128
     :param epi_seq_length: epitope sequence length, defaults to 800
-    :param neg_sample_mode: 0-random sampling from dataset / 1-random sequence / 2-choose from BLAST, defaults to 0
-    :return: a list of pair data
+    :param seq_clip_mode: padding antigen seq if shorter than L else 0 - random sampling / 1 - k nearest amino acids, defaults to 0
+    :param neg_sample_mode: 0-random sampling from dataset / 1 - random sequence / 2 - choose from BLAST, defaults to 0
+    :return: [(paratope, antigen_pos, 1), (paratope, antigen_neg, 0), ...]
     """
+    
     pair_data = []
 
+    # seq_clip_mode
+    # 0 - random sample amino acids
+    if seq_clip_mode==0:
+        pass
+    # 1 - k nearest amino acids
+    elif seq_clip_mode==1:
+        data = get_knearest_epi(data)
+    else:
+        print("Not Implemented seq_clip_mode number!")
+
     for i in range(len(data)):
+
         # paratope
         paratope = data[i]["Hseq"][0] + "/" + data[i]["Lseq"][0]
-        paratope = seq_clip(seq=paratope, target_length=para_seq_length, seq_clip_mode=seq_clip_mode)
+        paratope = seq_pad_clip(seq=paratope, target_length=para_seq_length, seq_clip_mode=seq_clip_mode, pdb_path=pdb_path)
 
-        # epitope - generate positive sample
-        if seq_clip_mode==0:
-            antigen_pos = "/".join(data[i]["Aseq"])
-            antigen_pos = seq_clip(seq=antigen_pos, target_length=epi_seq_length, seq_clip_mode=seq_clip_mode)
-
-        # epitope - generate negative sample
-        # 0 - random sampling from all epitope seqs
+        # epitope - positive sample
+        antigen_pos = "/".join(data[i]["Aseq"])
+        antigen_pos = seq_pad_clip(seq=antigen_pos, target_length=epi_seq_length)
+        
+        # epitope - negative sample
+        # 0 - random sample from all epitope seqs
         if neg_sample_mode==0:
-            j = random.randint(0,len(data)-1)
+            j = random.randint(0, len(data)-1)
             antigen_neg = "/".join(data[j]["Aseq"])
             
             while seq_sim(antigen_neg, antigen_pos)>=0.5:
                 j = random.randint(0, len(data)-1)
                 antigen_neg = "/".join(data[j]["Aseq"])
-            antigen_neg = seq_clip(seq=antigen_neg, target_length=epi_seq_length, seq_clip_mode=seq_clip_mode)
+
+            antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length, seq_clip_mode=seq_clip_mode, pdb_path=pdb_path)
         # 1 - random sequence
         elif neg_sample_mode==1:
             candidates = "".join([k for k in vocab.keys()])
             antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
         # 2 - BLAST
         else:
+            print("Not Implemented BLAST!")
             pass
+
 
         # append to pair_data
         pair_data.append((paratope, antigen_pos, 1))
@@ -58,8 +77,29 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg
 
 # SAbDab
 class SAbDabDataset(torch.utils.data.Dataset):
-    def __init__(self, data, para_seq_length=128, epi_seq_length=800, neg_sample_mode=0, kfold=10, holdout_fold=0, is_train=True, is_shuffle=True):
-        self.pair_data = get_pair(data, para_seq_length=para_seq_length, epi_seq_length=epi_seq_length, neg_sample_mode=neg_sample_mode)
+    def __init__(
+            self, \
+            data, \
+            para_seq_length=128, \
+            epi_seq_length=800, \
+            seq_clip_mode=0, \
+            neg_sample_mode=0, \
+            kfold=10, \
+            holdout_fold=0, \
+            is_train=True, \
+            is_shuffle=False, \
+            folds_path=None, \
+            save_path=None, \
+            pdb_path=None
+        ):
+        # load folds if existing else preprocessing
+        if folds_path==None:
+            self.pair_data = get_pair(data, para_seq_length=para_seq_length, epi_seq_length=epi_seq_length, \
+                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode, pdb_path=pdb_path)
+            pickle.dump(self.pair_data, open(save_path, "wb"))
+        else:
+            self.pair_data = pickle.load(open(folds_path, "rb"))
+
         if is_shuffle==True:
             random.seed(42)
             random.shuffle(self.pair_data)

@@ -71,12 +71,49 @@ def seq_sim(target, query):
     return score
 
 
-def seq_clip(seq, target_length=800, seq_clip_mode=0):
+def get_knearest_epi(data, mode=0, K=48, threshold=10):
+
+    """only reserve k nearest amino acids as epitope
+
+    :return: [data_entry]
+    """
+
+    # get k nearest (K = 48)
+    if mode==0:
+        for i in range(len(data)):
+            # maintain a heap with k amino acids
+            epitope = []
+            Apos = np.hstack(data[i]["Apos"])
+            Aseq = "".join(data[i]["Aseq"])
+            for Aidx in range(len(Aseq)):
+                # traverse heavy/light chain to find nearest distance
+                nearest_dist = np.inf
+                for Hidx in range(len(data[i]["Hpos"])):
+                    cur_dist = np.sqrt(np.sum((Apos[Aidx][0] - data[i]["Hpos"][Hidx][0]) ** 2))
+                    nearest_dist = np.min([cur_dist, nearest_dist])
+                for Lidx in range(len(data[i]["Lpos"])):
+                    cur_dist = np.sqrt(np.sum((Apos[Aidx][0] - data[i]["Lpos"][Lidx][0]) ** 2))
+                    nearest_dist = np.min([cur_dist, nearest_dist])
+
+                epitope.append((nearest_dist, Aidx))
+
+            epitope_heap = heapq.nsmallest(K, epitope, key=lambda x:x[0])
+            epitope_index = sorted([i[1] for i in epitope_heap])
+
+            data[i]["epitope"] = "".join([aseq[i] for i in epitope_index])
+
+    # get within threshold (10 Anstrom)
+    if mode==1:
+        pass
+
+    return data
+
+
+def seq_pad_clip(seq, target_length=800):
     """clip sequence to target length
 
     :param seq: seq
     :param target_length: target length, defaults to 800
-    :param seq_clip_mode: 0 - random sample / 1 - k nearest amino acids
     :return: clipped sequence
     """
     
@@ -85,15 +122,10 @@ def seq_clip(seq, target_length=800, seq_clip_mode=0):
         subseq = seq + "#" * (target_length - len(seq))
         return subseq
     else:
-        # random sampling if larger
-        if seq_clip_mode==0:
-            seq = [(i, seq[i]) for i in range(len(seq))]
-            subseq = random.sample(seq, target_length)
-            subseq = sorted(subseq, key=lambda x:x[0])
-            subseq = "".join([subseq[i][1] for i in range(len(subseq))])
-        # k nearest amino acids if larger
-        if seq_clip_mode==1:
-            subseq = get_knn_epitope(seq)
+        seq = [(i, seq[i]) for i in range(len(seq))]
+        subseq = random.sample(seq, target_length)
+        subseq = sorted(subseq, key=lambda x:x[0])
+        subseq = "".join([subseq[i][1] for i in range(len(subseq))])
         
         return subseq
 
