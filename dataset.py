@@ -7,6 +7,7 @@ import pickle
 import random
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from utils import *
 
 
@@ -37,36 +38,61 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg
     else:
         print("Not Implemented seq_clip_mode number!")
 
-    for i in range(len(data)):
+
+    print("Start getting pair data...")
+    for i in tqdm(range(len(data))):
 
         # paratope
         paratope = data[i]["Hseq"][0] + "/" + data[i]["Lseq"][0]
-        paratope = seq_pad_clip(seq=paratope, target_length=para_seq_length, seq_clip_mode=seq_clip_mode, pdb_path=pdb_path)
+        paratope = seq_pad_clip(seq=paratope, target_length=para_seq_length)
 
         # epitope - positive sample
-        antigen_pos = "/".join(data[i]["Aseq"])
-        antigen_pos = seq_pad_clip(seq=antigen_pos, target_length=epi_seq_length)
-        
+        if seq_clip_mode==0:
+            antigen_pos = "/".join(data[i]["Aseq"])
+            antigen_pos = seq_pad_clip(seq=antigen_pos, target_length=epi_seq_length)
+        elif seq_clip_mode==1:
+            antigen_pos = data[i]["epitope"]
+        else:
+            print("Not Implemented seq_clip_mode!")
+
         # epitope - negative sample
         # 0 - random sample from all epitope seqs
-        if neg_sample_mode==0:
-            j = random.randint(0, len(data)-1)
-            antigen_neg = "/".join(data[j]["Aseq"])
-            
-            while seq_sim(antigen_neg, antigen_pos)>=0.5:
+        if seq_clip_mode==0:
+            if neg_sample_mode==0:
                 j = random.randint(0, len(data)-1)
                 antigen_neg = "/".join(data[j]["Aseq"])
+                
+                while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                    j = random.randint(0, len(data)-1)
+                    antigen_neg = "/".join(data[j]["Aseq"])
 
-            antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length, seq_clip_mode=seq_clip_mode, pdb_path=pdb_path)
-        # 1 - random sequence
-        elif neg_sample_mode==1:
-            candidates = "".join([k for k in vocab.keys()])
-            antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
-        # 2 - BLAST
-        else:
-            print("Not Implemented BLAST!")
-            pass
+                antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
+            # 1 - random sequence
+            elif neg_sample_mode==1:
+                candidates = "".join([k for k in vocab.keys()])
+                antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
+            # 2 - BLAST
+            else:
+                print("Not Implemented BLAST!")
+                pass
+        elif seq_clip_mode==1:
+            if neg_sample_mode==0:
+                j = random.randint(0, len(data)-1)
+                antigen_neg = data[j]["epitope"]
+                
+                while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                    j = random.randint(0, len(data)-1)
+                    antigen_neg = data[j]["epitope"]
 
+                antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
+            # 1 - random sequence
+            elif neg_sample_mode==1:
+                candidates = "".join([k for k in vocab.keys()])
+                antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
+            # 2 - BLAST
+            else:
+                print("Not Implemented BLAST!")
+                pass
 
         # append to pair_data
         pair_data.append((paratope, antigen_pos, 1))
