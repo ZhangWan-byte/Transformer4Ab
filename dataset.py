@@ -11,8 +11,7 @@ from tqdm import tqdm
 from utils import *
 
 
-def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg_sample_mode=0, \
-    pdb_path="../../MSAI_Project/SAbDab_20221124/all_structures/imgt/"):
+def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1):
     
     """process original data to format in pairs
 
@@ -21,8 +20,8 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=0, neg
         "Apos": [N, CA, C, O]
     :param para_seq_length: paratope sequence length, defaults to 128
     :param epi_seq_length: epitope sequence length, defaults to 800
-    :param seq_clip_mode: padding antigen seq if shorter than L else 0 - random sampling / 1 - k nearest amino acids, defaults to 0
-    :param neg_sample_mode: 0-random sampling from dataset / 1 - random sequence / 2 - choose from BLAST, defaults to 0
+    :param seq_clip_mode: padding antigen seq if shorter than L else 0 - random sampling / 1 - k nearest amino acids, defaults to 1
+    :param neg_sample_mode: 0-random sampling from dataset / 1 - random sequence / 2 - choose from BLAST, defaults to 1
     :return: [(paratope, antigen_pos, 1), (paratope, antigen_neg, 0), ...]
     """
     
@@ -108,20 +107,19 @@ class SAbDabDataset(torch.utils.data.Dataset):
             data, \
             para_seq_length=128, \
             epi_seq_length=800, \
-            seq_clip_mode=0, \
-            neg_sample_mode=0, \
+            seq_clip_mode=1, \
+            neg_sample_mode=1, \
             kfold=10, \
             holdout_fold=0, \
             is_train=True, \
             is_shuffle=False, \
             folds_path=None, \
-            save_path=None, \
-            pdb_path=None
+            save_path=None
         ):
         # load folds if existing else preprocessing
         if folds_path==None:
             self.pair_data = get_pair(data=data, para_seq_length=para_seq_length, epi_seq_length=epi_seq_length, \
-                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode, pdb_path=pdb_path)
+                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode)
             if save_path!=None:
                 pickle.dump(self.pair_data, open(save_path, "wb"))
             else:
