@@ -7,7 +7,7 @@ from utils import *
 
 
 class InteractTransformer(nn.Module):
-    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128):
+    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6):
         super(InteractTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
@@ -17,8 +17,12 @@ class InteractTransformer(nn.Module):
         # self.Linear_epi = nn.Sequential(nn.Linear(epi_seq_length, hidden), nn.LeakyReLU(), nn.Dropout(0.1), \
         #                                 nn.Linear(hidden, hidden), nn.LeakyReLU())
 
-        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=2, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
-        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=2, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
+        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=2, \
+            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
+            dim_feedforward=1024, dropout=0.1)
+        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=2, \
+            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
+            dim_feedforward=1024, dropout=0.1)
 
         self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
                                       nn.Linear(embed_size//2, 1), nn.LeakyReLU())
@@ -126,12 +130,14 @@ class CoAttention(nn.Module):
 
 
 class InteractCoattnTransformer(nn.Module):
-    def __init__(self, embed_size=64, seq_length=128):
+    def __init__(self, embed_size=64, seq_length=128, num_encoder_layers=6, num_decoder_layers=6):
         super(InteractCoattnTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
-        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
-        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
+        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, \
+            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=1024, dropout=0.1)
+        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, \
+            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=1024, dropout=0.1)
                 
         self.co_attn = CoAttention(embed_size=embed_size, output_size=embed_size)
 

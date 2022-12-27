@@ -118,6 +118,7 @@ class SAbDabDataset(torch.utils.data.Dataset):
         ):
         # load folds if existing else preprocessing
         if folds_path==None:
+            print("folds_path none, preprocessing...")
             self.pair_data = get_pair(data=data, para_seq_length=para_seq_length, epi_seq_length=epi_seq_length, \
                 seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode)
             if save_path!=None:
@@ -125,6 +126,7 @@ class SAbDabDataset(torch.utils.data.Dataset):
             else:
                 pickle.dump(self.pair_data, open("./data/processed_data_clip{}_neg{}.pkl".format(seq_clip_mode, neg_sample_mode), "wb"))
         else:
+            print("loading preprocessed data from {}".format(folds_path))
             self.pair_data = pickle.load(open(folds_path, "rb"))
 
         if is_shuffle==True:
