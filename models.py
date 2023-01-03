@@ -377,19 +377,107 @@ class SetTransformer(nn.Module):
     def __init__(self, dim_input, num_outputs, dim_output,
             num_inds=32, dim_hidden=128, num_heads=4, ln=False):
         super(SetTransformer, self).__init__()
-        self.embedding = nn.Embedding(len(vocab), dim_input)
+
+        self.embedding_para = nn.Embedding(len(vocab), dim_input)
+        self.embedding_epi = nn.Embedding(len(vocab), dim_input)
+        
         self.enc = nn.Sequential(
                 ISAB(dim_input, dim_hidden, num_heads, num_inds, ln=ln),
                 ISAB(dim_hidden, dim_hidden, num_heads, num_inds, ln=ln))
+        
         self.dec = nn.Sequential(
                 PMA(dim_hidden, num_heads, num_outputs, ln=ln),
                 SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
                 SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
                 nn.Linear(dim_hidden, dim_output))
 
-    def forward(self, X):
-        X = self.embedding(X)
-        return self.dec(self.enc(X))
+    def forward(self, para, epi):
+        para = self.embedding_para(para)
+        # (batch, seq_len, embed_size) / (batch, num_inds, dim_input)
+        para = self.enc(para)
+        # (batch, seq_len, hidden) / (batch, num_inds, dim_hidden)
+        para = self.dec(para)
+        # (batch, seq_len, embed_size) / (batch, num_inds, dim_output)
+
+        epi = self.embedding_epi(epi)
+        # (batch, seq_len, embed_size) / (batch, num_inds, dim_input)
+        epi = self.enc(epi)
+        # (batch, seq_len, hidden) / (batch, num_inds, dim_hidden)
+        epi = self.dec(epi)
+        # (batch, seq_len, embed_size) / (batch, num_inds, dim_output)
+
+
+
+        return X
+
+
+class SetCoAttnTransformer(nn.Module):
+    def __init__(self, dim_input, num_outputs, dim_output,
+            num_inds=32, dim_hidden=128, num_heads=4, ln=False):
+        super(SetTransformer, self).__init__()
+        
+        self.embedding = nn.Embedding(len(vocab), dim_input)
+        
+        self.enc = nn.Sequential(
+                ISAB(dim_input, dim_hidden, num_heads, num_inds, ln=ln),
+                ISAB(dim_hidden, dim_hidden, num_heads, num_inds, ln=ln))
+        
+        self.co_attn = CoAttention(embed_size=dim_hidden, output_size=dim_hidden)
+        
+        self.dec = nn.Sequential(
+                PMA(dim_hidden, num_heads, num_outputs, ln=ln),
+                SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
+                SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
+                nn.Linear(dim_hidden, dim_output))
+
+        # self.MLP_para = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        #                          nn.Linear(dim_output//2, 1))
+        # self.MLP_epi = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        #                          nn.Linear(dim_output//2, 1))
+        self.MLP = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                 nn.Linear(dim_output//2, 1))
+
+        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                          nn.Linear(seq_length//2, 1), nn.Sigmoid())
+
+
+    def forward(self, para, epi):
+        # embedding
+        para = self.embedding(para)
+        epi = self.embedding(epi)
+        # (batch, seq_len, embed_size) / (batch, num_inds, dim_input)
+
+        # encoder
+        para = self.enc(para)
+        epi = self.enc(epi)
+        # (batch, seq_len, hidden) / (batch, num_inds, dim_hidden)
+
+        # co-attention
+        para, epi = self.co_attn(para, epi)
+        # (batch, seq_len, hidden) / (batch, num_inds, dim_hidden)
+
+        # decoder
+        para = self.dec(para)
+        epi = self.dec(epi)
+        # (batch, seq_len, embed_size) / (batch, num_inds, dim_output)
+
+        # co-attention
+        para, epi = self.co_attn(para, epi)
+        # (batch, seq_len, embed_size) / (batch, num_inds, dim_output)
+
+        # MLP
+        para = self.MLP(para)
+        epi = self.MLP(epi)
+        # (batch, seq_len, 1) / (batch, num_inds, 1)
+        para = para.squeeze(2)
+        epi = epi.squeeze(2)
+        # (batch, seq_len) / (batch, num_inds)
+
+        # output
+        x = para * epi
+        x = self.output_layer(x)
+
+        return x
 
 
 if __name__ == "__main__":

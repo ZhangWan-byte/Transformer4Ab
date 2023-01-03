@@ -11,7 +11,7 @@ from tqdm import tqdm
 from utils import *
 
 
-def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1):
+def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48):
     
     """process original data to format in pairs
 
@@ -33,7 +33,7 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg
         pass
     # 1 - k nearest amino acids
     elif seq_clip_mode==1:
-        data = get_knearest_epi(data)
+        data = get_knearest_epi(data, K=48)
     else:
         print("Not Implemented seq_clip_mode number!")
 
@@ -114,13 +114,14 @@ class SAbDabDataset(torch.utils.data.Dataset):
             is_train=True, \
             is_shuffle=False, \
             folds_path=None, \
-            save_path=None
+            save_path=None,
+            K=48
         ):
         # load folds if existing else preprocessing
         if folds_path==None:
             print("folds_path none, preprocessing...")
             self.pair_data = get_pair(data=data, para_seq_length=para_seq_length, epi_seq_length=epi_seq_length, \
-                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode)
+                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode, K=K)
             if save_path!=None:
                 pickle.dump(self.pair_data, open(save_path, "wb"))
             else:
