@@ -414,7 +414,7 @@ class SetTransformer(nn.Module):
 class SetCoAttnTransformer(nn.Module):
     def __init__(self, dim_input, num_outputs, dim_output,
             num_inds=32, dim_hidden=128, num_heads=4, ln=False):
-        super(SetTransformer, self).__init__()
+        super(SetCoAttnTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), dim_input)
         
@@ -437,8 +437,8 @@ class SetCoAttnTransformer(nn.Module):
         self.MLP = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(0.1), \
                                  nn.Linear(dim_output//2, 1))
 
-        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
-                                          nn.Linear(seq_length//2, 1), nn.Sigmoid())
+        self.output_layer = nn.Sequential(nn.Linear(num_inds, num_inds//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                          nn.Linear(num_inds//2, 1), nn.Sigmoid())
 
 
     def forward(self, para, epi):
