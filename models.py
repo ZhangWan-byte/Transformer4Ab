@@ -311,6 +311,7 @@ class InteractCoattn_noTransformer(nn.Module):
 
 
 # Set Transformer Modules
+# https://github.com/juho-lee/set_transformer
 class MAB(nn.Module):
     def __init__(self, dim_Q, dim_K, dim_V, num_heads, ln=False):
         super(MAB, self).__init__()
@@ -372,6 +373,7 @@ class PMA(nn.Module):
 
 
 # Set Transformer
+# https://github.com/juho-lee/set_transformer
 class SetTransformer(nn.Module):
     def __init__(self, dim_input, num_outputs, dim_output,
             num_inds=32, dim_hidden=128, num_heads=4, ln=False):
