@@ -461,9 +461,9 @@ class SetCoAttnTransformer(nn.Module):
         epi = self.dec(epi)
         # (batch, seq_len, embed_size) / (batch, num_inds, dim_output)
 
-        # co-attention
-        para, epi = self.co_attn(para, epi)
-        # (batch, seq_len, embed_size) / (batch, num_inds, dim_output)
+        # # co-attention
+        # para, epi = self.co_attn(para, epi)
+        # # (batch, seq_len, embed_size) / (batch, num_inds, dim_output)
 
         # MLP
         para = self.MLP(para)
