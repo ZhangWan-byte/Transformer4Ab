@@ -368,7 +368,7 @@ class InteractCoattnTransformer_share(nn.Module):
         self.embedding = nn.Embedding(len(vocab), embed_size)
 
         self.transformer = nn.Transformer(d_model=embed_size, nhead=4, \
-            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=1024, dropout=0.1)
+            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=256, dropout=0.1)
                 
         self.co_attn = CoAttention(embed_size=embed_size, output_size=embed_size)
 
