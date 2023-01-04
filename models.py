@@ -10,6 +10,53 @@ from dataset import *
 from utils import *
 
 
+class BiLSTM(nn.Module):
+    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_layers=2):
+        super(BiLSTM, self).__init__()
+        
+        self.embedding = nn.Embedding(len(vocab), embed_size)
+
+        self.LSTM_para = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=int(hidden/num_layers))
+
+        self.LSTM_epi = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=int(hidden/num_layers))
+        
+        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                      nn.Linear(embed_size//2, 1), nn.LeakyReLU())
+        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                     nn.Linear(embed_size//2, 1), nn.LeakyReLU())
+        
+        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+                                          nn.Linear(para_seq_length//2, 1), nn.Sigmoid())
+    
+    def forward(self, para, epi):
+        
+        # paratope
+        para = self.embedding(para)
+        # (batch, para_seq_length, embed_size)
+        para, _ = self.LSTM_para(para)        
+        # (batch, para_seq_length, embed_size)
+        para = self.MLP_para(para)
+        # (batch, para_seq_length, 1)
+        para = para.squeeze(2)
+        # (batch, para_seq_length)
+        
+        # epitope
+        epi = self.embedding(epi)
+        # (batch, epi_seq_length, embed_size)
+        epi, _ = self.LSTM_epi(epi)        
+        # (batch, epi_seq_length, embed_size)
+        epi = self.MLP_epi(epi)
+        # (batch, epi_seq_length, 1)
+        epi = epi.squeeze(2)
+        # (batch, epi_seq_length)
+
+        x = para * epi
+        
+        x = self.output_layer(x)
+        
+        return x
+
+
 class InteractTransformer(nn.Module):
     def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6):
         super(InteractTransformer, self).__init__()
