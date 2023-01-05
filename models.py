@@ -16,9 +16,10 @@ class BiLSTM(nn.Module):
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
 
-        self.LSTM_para = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=int(hidden/num_layers))
+        proj_size = int(hidden/num_layers) if num_layers>1 else 0
+        self.LSTM_para = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=proj_size)
 
-        self.LSTM_epi = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=int(hidden/num_layers))
+        self.LSTM_epi = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=proj_size)
         
         self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                       nn.Linear(embed_size//2, 1), nn.LeakyReLU())
