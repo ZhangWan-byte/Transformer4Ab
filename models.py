@@ -716,19 +716,21 @@ class AlternateCoattnModel(nn.Module):
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
 
-        self.mha_modules = nn.ModuleList([])
+        self.mha_modules_para = nn.ModuleList([])
+        self.mha_modules_epi = nn.ModuleList([])
         self.coattn_modules = nn.ModuleList([])
 
         self.num_alternates = num_alternates
         for i in range(self.num_alternates):
-            self.mha_modules.append(nn.MultiheadAttention(embed_dim=embed_size, num_heads=4))
+            self.mha_modules_para.append(nn.MultiheadAttention(embed_dim=embed_size, num_heads=4))
+            self.mha_modules_epi.append(nn.MultiheadAttention(embed_dim=embed_size, num_heads=4))
             self.coattn_modules.append(CoAttention(embed_size=embed_size, output_size=embed_size))
 
         self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                  nn.Linear(embed_size//2, 1))
         self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
-                                 nn.Linear(embed_size//2, 1))        
-        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
+                                 nn.Linear(embed_size//2, 1))
+        self.output_layer = nn.Sequential(nn.Linear(seq_length*2, seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -739,8 +741,8 @@ class AlternateCoattnModel(nn.Module):
         # (batch, seq_length, embed_size)
 
         for i in range(self.num_alternates):
-            para, _ = self.mha_modules[i](para, para, para)
-            epi, _ = self.mha_modules[i](epi, epi, epi)
+            para, _ = self.mha_modules_para[i](para, para, para)
+            epi, _ = self.mha_modules_epi[i](epi, epi, epi)
 
             para, epi = self.coattn_modules[i](para, epi)
 
@@ -754,9 +756,9 @@ class AlternateCoattnModel(nn.Module):
         epi = epi.squeeze(2)
         # (batch, seq_length)
 
-        x = para * epi
-        # (batch, seq_length)
-        
+        # x = para * epi
+        # # (batch, seq_length)
+        x = torch.concat([para, epi], dim=1)
         x = self.output_layer(x)
         
         return x
