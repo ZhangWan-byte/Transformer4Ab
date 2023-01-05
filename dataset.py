@@ -10,7 +10,12 @@ import pandas as pd
 from tqdm import tqdm
 from utils import *
 
-random.seed(42)
+
+def set_seed(seed=3407):
+    random.seed(3407)
+    torch.manual_seed(3407)
+    np.random.seed(3407)
+
 
 def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48):
     
