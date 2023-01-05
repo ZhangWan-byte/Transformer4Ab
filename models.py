@@ -15,8 +15,8 @@ class BiLSTM(nn.Module):
         super(BiLSTM, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
-
-        proj_size = int(hidden/num_layers) if num_layers>1 else 0
+        
+        proj_size = int(hidden/num_layers) if num_layers>1 else int(hidden/2)
         self.LSTM_para = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=proj_size)
 
         self.LSTM_epi = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=proj_size)
@@ -34,7 +34,7 @@ class BiLSTM(nn.Module):
         # paratope
         para = self.embedding(para)
         # (batch, para_seq_length, hidden)
-        para, _ = self.LSTM_para(para)        
+        para, _ = self.LSTM_para(para)
         # (batch, para_seq_length, hidden)
         para = self.MLP_para(para)
         # (batch, para_seq_length, 1)
