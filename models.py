@@ -11,7 +11,7 @@ from utils import *
 
 
 class BiLSTM(nn.Module):
-    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_layers=2):
+    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_layers=2, dropout=0.1):
         super(BiLSTM, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
@@ -20,12 +20,12 @@ class BiLSTM(nn.Module):
 
         self.LSTM_epi = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=int(hidden/num_layers))
         
-        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                       nn.Linear(embed_size//2, 1), nn.LeakyReLU())
-        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                      nn.Linear(embed_size//2, 1), nn.LeakyReLU())
         
-        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(para_seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -58,7 +58,7 @@ class BiLSTM(nn.Module):
 
 
 class InteractTransformer(nn.Module):
-    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6):
+    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6, dropout=0.1):
         super(InteractTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
@@ -70,17 +70,17 @@ class InteractTransformer(nn.Module):
 
         self.transformer_para = nn.Transformer(d_model=embed_size, nhead=2, \
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
-            dim_feedforward=1024, dropout=0.1)
+            dim_feedforward=1024, dropout=dropout)
         self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=2, \
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
-            dim_feedforward=1024, dropout=0.1)
+            dim_feedforward=1024, dropout=dropout)
 
-        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                       nn.Linear(embed_size//2, 1), nn.LeakyReLU())
-        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                      nn.Linear(embed_size//2, 1), nn.LeakyReLU())
         
-        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(para_seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -121,19 +121,19 @@ class InteractTransformer(nn.Module):
 
 
 class InteractTransformer_share(nn.Module):
-    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6):
+    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6, dropout=0.1):
         super(InteractTransformer_share, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
 
         self.transformer = nn.Transformer(d_model=embed_size, nhead=2, \
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
-            dim_feedforward=1024, dropout=0.1)
+            dim_feedforward=1024, dropout=dropout)
 
-        self.MLP = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                       nn.Linear(embed_size//2, 1), nn.LeakyReLU())
         
-        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(para_seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -174,7 +174,7 @@ class InteractTransformer_share(nn.Module):
 
 
 class BiInteractTransformer(nn.Module):
-    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6):
+    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6, dropout=0.1):
         super(BiInteractTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
@@ -186,17 +186,17 @@ class BiInteractTransformer(nn.Module):
 
         self.transformer_para = nn.Transformer(d_model=embed_size, nhead=2, \
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
-            dim_feedforward=1024, dropout=0.1)
+            dim_feedforward=1024, dropout=dropout)
         self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=2, \
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
-            dim_feedforward=1024, dropout=0.1)
+            dim_feedforward=1024, dropout=dropout)
 
-        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                       nn.Linear(embed_size//2, 1), nn.LeakyReLU())
-        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                      nn.Linear(embed_size//2, 1), nn.LeakyReLU())
         
-        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(para_seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -234,24 +234,24 @@ class BiInteractTransformer(nn.Module):
 
 
 class BiInteractTransformer_shallow(nn.Module):
-    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6):
+    def __init__(self, embed_size=64, para_seq_length=128, epi_seq_length=400, hidden=128, num_encoder_layers=6, num_decoder_layers=6, dropout=0.1):
         super(BiInteractTransformer_shallow, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
 
         self.transformer_para = nn.Transformer(d_model=embed_size, nhead=2, \
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
-            dim_feedforward=1024, dropout=0.1)
+            dim_feedforward=1024, dropout=dropout)
         self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=2, \
             num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, \
-            dim_feedforward=1024, dropout=0.1)
+            dim_feedforward=1024, dropout=dropout)
 
-        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                       nn.Linear(embed_size//2, 1), nn.LeakyReLU())
-        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                      nn.Linear(embed_size//2, 1), nn.LeakyReLU())
         
-        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(para_seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -349,23 +349,23 @@ class CoAttention(nn.Module):
 
 
 class InteractCoattnTransformer(nn.Module):
-    def __init__(self, embed_size=64, seq_length=128, num_encoder_layers=6, num_decoder_layers=6):
+    def __init__(self, embed_size=64, seq_length=128, num_encoder_layers=6, num_decoder_layers=6, dropout=0.1):
         super(InteractCoattnTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
         self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, \
-            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=512, dropout=0.1)
+            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=512, dropout=dropout)
         self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, \
-            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=512, dropout=0.1)
+            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=512, dropout=dropout)
                 
         self.co_attn = CoAttention(embed_size=embed_size, output_size=embed_size)
 
-        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                  nn.Linear(embed_size//2, 1))
-        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                  nn.Linear(embed_size//2, 1))
         
-        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -409,20 +409,20 @@ class InteractCoattnTransformer(nn.Module):
 
 
 class InteractCoattnTransformer_share(nn.Module):
-    def __init__(self, embed_size=64, seq_length=128, num_encoder_layers=6, num_decoder_layers=6):
+    def __init__(self, embed_size=64, seq_length=128, num_encoder_layers=6, num_decoder_layers=6, dropout=0.1):
         super(InteractCoattnTransformer_share, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
 
         self.transformer = nn.Transformer(d_model=embed_size, nhead=4, \
-            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=256, dropout=0.1)
+            num_encoder_layers=num_encoder_layers, num_decoder_layers=num_decoder_layers, dim_feedforward=256, dropout=dropout)
                 
         self.co_attn = CoAttention(embed_size=embed_size, output_size=embed_size)
 
-        self.MLP = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                  nn.Linear(embed_size//2, 1))
         
-        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -466,21 +466,21 @@ class InteractCoattnTransformer_share(nn.Module):
 
 
 class InteractCoattn_noTransformer(nn.Module):
-    def __init__(self, embed_size=64, seq_length=128):
+    def __init__(self, embed_size=64, seq_length=128, dropout=0.1):
         super(InteractCoattn_noTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), embed_size)
-        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
-        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=0.1)
+        self.transformer_para = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=dropout)
+        self.transformer_epi = nn.Transformer(d_model=embed_size, nhead=4, num_encoder_layers=6, num_decoder_layers=6, dim_feedforward=1024, dropout=dropout)
                 
         self.co_attn = CoAttention(embed_size=embed_size, output_size=embed_size)
 
-        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                  nn.Linear(embed_size//2, 1))
-        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                  nn.Linear(embed_size//2, 1))
         
-        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(seq_length, seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(seq_length//2, 1), nn.Sigmoid())
     
     def forward(self, para, epi):
@@ -587,7 +587,7 @@ class PMA(nn.Module):
 
 class SetTransformer(nn.Module):
     def __init__(self, dim_input, num_outputs, dim_output,
-            num_inds=32, dim_hidden=128, num_heads=4, ln=False):
+            num_inds=32, dim_hidden=128, num_heads=4, ln=False, dropout=0.1):
         super(SetTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), dim_input)
@@ -602,10 +602,10 @@ class SetTransformer(nn.Module):
                 SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
                 nn.Linear(dim_hidden, dim_output))
 
-        self.MLP = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                  nn.Linear(dim_output//2, 1))
 
-        self.output_layer = nn.Sequential(nn.Linear(num_inds, num_inds//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(num_inds, num_inds//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(num_inds//2, 1), nn.Sigmoid())
 
 
@@ -642,7 +642,7 @@ class SetTransformer(nn.Module):
 
 class SetCoAttnTransformer(nn.Module):
     def __init__(self, dim_input, num_outputs, dim_output,
-            num_inds=32, dim_hidden=128, num_heads=4, ln=False):
+            num_inds=32, dim_hidden=128, num_heads=4, ln=False, dropout=0.1):
         super(SetCoAttnTransformer, self).__init__()
         
         self.embedding = nn.Embedding(len(vocab), dim_input)
@@ -663,10 +663,10 @@ class SetCoAttnTransformer(nn.Module):
         #                          nn.Linear(dim_output//2, 1))
         # self.MLP_epi = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(0.1), \
         #                          nn.Linear(dim_output//2, 1))
-        self.MLP = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.MLP = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                  nn.Linear(dim_output//2, 1))
 
-        self.output_layer = nn.Sequential(nn.Linear(num_inds, num_inds//2), nn.LeakyReLU(), nn.Dropout(0.1), \
+        self.output_layer = nn.Sequential(nn.Linear(num_inds, num_inds//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(num_inds//2, 1), nn.Sigmoid())
 
 
