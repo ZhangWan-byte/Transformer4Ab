@@ -10,6 +10,7 @@ import pandas as pd
 from tqdm import tqdm
 from utils import *
 
+random.seed(42)
 
 def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48):
     
@@ -131,7 +132,6 @@ class SAbDabDataset(torch.utils.data.Dataset):
             self.pair_data = pickle.load(open(folds_path, "rb"))
 
         if is_shuffle==True:
-            random.seed(42)
             random.shuffle(self.pair_data)
 
         self.is_train = is_train
