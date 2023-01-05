@@ -21,10 +21,10 @@ class BiLSTM(nn.Module):
 
         self.LSTM_epi = nn.LSTM(input_size=embed_size, hidden_size=hidden, num_layers=num_layers, bidirectional=True, proj_size=proj_size)
         
-        self.MLP_para = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
-                                      nn.Linear(embed_size//2, 1), nn.LeakyReLU())
-        self.MLP_epi = nn.Sequential(nn.Linear(embed_size, embed_size//2), nn.LeakyReLU(), nn.Dropout(dropout), \
-                                     nn.Linear(embed_size//2, 1), nn.LeakyReLU())
+        self.MLP_para = nn.Sequential(nn.Linear(hidden, hidden//2), nn.LeakyReLU(), nn.Dropout(dropout), \
+                                      nn.Linear(hidden//2, 1), nn.LeakyReLU())
+        self.MLP_epi = nn.Sequential(nn.Linear(hidden, hidden//2), nn.LeakyReLU(), nn.Dropout(dropout), \
+                                     nn.Linear(hidden//2, 1), nn.LeakyReLU())
         
         self.output_layer = nn.Sequential(nn.Linear(para_seq_length, para_seq_length//2), nn.LeakyReLU(), nn.Dropout(dropout), \
                                           nn.Linear(para_seq_length//2, 1), nn.Sigmoid())
@@ -33,9 +33,9 @@ class BiLSTM(nn.Module):
         
         # paratope
         para = self.embedding(para)
-        # (batch, para_seq_length, embed_size)
+        # (batch, para_seq_length, hidden)
         para, _ = self.LSTM_para(para)        
-        # (batch, para_seq_length, embed_size)
+        # (batch, para_seq_length, hidden)
         para = self.MLP_para(para)
         # (batch, para_seq_length, 1)
         para = para.squeeze(2)
@@ -43,9 +43,9 @@ class BiLSTM(nn.Module):
         
         # epitope
         epi = self.embedding(epi)
-        # (batch, epi_seq_length, embed_size)
+        # (batch, epi_seq_length, hidden)
         epi, _ = self.LSTM_epi(epi)        
-        # (batch, epi_seq_length, embed_size)
+        # (batch, epi_seq_length, hidden)
         epi = self.MLP_epi(epi)
         # (batch, epi_seq_length, 1)
         epi = epi.squeeze(2)
