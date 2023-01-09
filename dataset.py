@@ -67,7 +67,7 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg
                 j = random.randint(0, len(data)-1)
                 antigen_neg = "/".join(data[j]["Aseq"])
                 
-                # re-sample if sim score >= 0.5
+                # re-sample if sim score >= 0.9
                 while seq_sim(antigen_neg, antigen_pos)>=0.9:
                     j = random.randint(0, len(data)-1)
                     antigen_neg = "/".join(data[j]["Aseq"])
