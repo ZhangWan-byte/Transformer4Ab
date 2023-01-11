@@ -19,6 +19,7 @@ def set_seed(seed=3407):
 
 def get_random_sequence(length=48):
     candidates = "".join([k for k in vocab.keys()])
+    candidates = candidates[:-3]
     antigen_neg = "".join(random.choices(candidates, k=length))
 
     return antigen_neg
@@ -164,18 +165,21 @@ class SAbDabDataset(torch.utils.data.Dataset):
             self.data_folds.append(data_tmp)
             self.label_folds.append(label_tmp)
 
-        # data augmentation
-        if data_augment==True:
-            tmp = self.data_folds[:int(augment_ratio*len(self.data_folds))]
-            tmp = [(entry[0], get_random_sequence(length=epi_seq_length), 0) for entry in tmp]
-            self.data_folds.extend(tmp)
-            self.label_folds.extend([0]*int(augment_ratio*len(self.data_folds)))
-
         # test data
         self.test_data = self.data_folds.pop(holdout_fold)
         self.test_label = self.label_folds.pop(holdout_fold)
         self.train_data = torch.vstack(self.data_folds)
         self.train_label = torch.hstack(self.label_folds)
+
+        # data augmentation
+        if data_augment==True:
+            print(int(augment_ratio*len(self.train_data)))
+            tmp = self.train_data[:int(augment_ratio*len(self.train_data)), :]
+            tmp = [[entry[0].numpy(), to_onehot(get_random_sequence(length=epi_seq_length))] for entry in tmp]
+            # print(len(tmp), tmp)
+            # print(self.data.shape, self.data)
+            self.train_data = torch.vstack([self.train_data, torch.Tensor(tmp)])
+            self.train_label = torch.hstack([self.train_label, torch.Tensor([0]*int(augment_ratio*len(self.train_data)))])
             
     def __len__(self):
         if self.is_train==True:
