@@ -1,3 +1,4 @@
+import heapq
 import pickle
 import random
 import numpy as np
@@ -100,7 +101,7 @@ def get_knearest_epi(data, mode=0, K=48, threshold=10):
             epitope_heap = heapq.nsmallest(K, epitope, key=lambda x:x[0])
             epitope_index = sorted([i[1] for i in epitope_heap])
 
-            data[i]["epitope"] = "".join([aseq[i] for i in epitope_index])
+            data[i]["epitope"] = "".join([Aseq[i] for i in epitope_index])
 
     # get within threshold (10 Anstrom)
     if mode==1:

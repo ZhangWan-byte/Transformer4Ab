@@ -143,6 +143,7 @@ class SAbDabDataset(torch.utils.data.Dataset):
             if save_path!=None:
                 pickle.dump(self.pair_data, open(save_path, "wb"))
             else:
+                print("save to ./data/processed_data_clip{}_neg{}.pkl".format(seq_clip_mode, neg_sample_mode))
                 pickle.dump(self.pair_data, open("./data/processed_data_clip{}_neg{}.pkl".format(seq_clip_mode, neg_sample_mode), "wb"))
         else:
             print("loading preprocessed data from {}".format(folds_path))
