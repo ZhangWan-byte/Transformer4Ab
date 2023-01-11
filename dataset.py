@@ -17,6 +17,13 @@ def set_seed(seed=3407):
     np.random.seed(3407)
 
 
+def get_random_sequence(length=48):
+    candidates = "".join([k for k in vocab.keys()])
+    antigen_neg = "".join(random.choices(candidates, k=length))
+
+    return antigen_neg
+
+
 def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48):
     
     """process original data to format in pairs
@@ -75,8 +82,9 @@ def get_pair(data, para_seq_length=128, epi_seq_length=800, seq_clip_mode=1, neg
                 antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
             # 1 - random sequence
             elif neg_sample_mode==1:
-                candidates = "".join([k for k in vocab.keys()])
-                antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
+                # candidates = "".join([k for k in vocab.keys()])
+                # antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
+                antigen_neg = get_random_sequence(length=epi_seq_length)
             # 2 - BLAST
             else:
                 print("Not Implemented BLAST!")
@@ -121,8 +129,10 @@ class SAbDabDataset(torch.utils.data.Dataset):
             is_train=True, \
             is_shuffle=False, \
             folds_path=None, \
-            save_path=None,
-            K=48
+            save_path=None, \
+            K=48, \
+            data_augment=False, \
+            augment_ratio=0.5
         ):
         # load folds if existing else preprocessing
         if folds_path==None:
@@ -153,6 +163,12 @@ class SAbDabDataset(torch.utils.data.Dataset):
             label_tmp = self.label[k*int((1/kfold)*len(self.label)):(k+1)*int((1/kfold)*len(self.label))]
             self.data_folds.append(data_tmp)
             self.label_folds.append(label_tmp)
+
+        # data augmentation
+        if data_augment==True:
+            tmp = self.data_folds[:int(augment_ratio*len(self.data_folds))]
+            tmp = [(entry[0], get_random_sequence(length=epi_seq_length), 0) for entry in tmp]
+            self.data_folds.extend(tmp)
 
         # test data
         self.test_data = self.data_folds.pop(holdout_fold)
