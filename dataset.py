@@ -169,6 +169,7 @@ class SAbDabDataset(torch.utils.data.Dataset):
             tmp = self.data_folds[:int(augment_ratio*len(self.data_folds))]
             tmp = [(entry[0], get_random_sequence(length=epi_seq_length), 0) for entry in tmp]
             self.data_folds.extend(tmp)
+            self.label_folds.extend([0]*int(augment_ratio*len(self.data_folds)))
 
         # test data
         self.test_data = self.data_folds.pop(holdout_fold)
