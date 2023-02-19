@@ -73,6 +73,36 @@ class PMA(nn.Module):
         return self.mab(self.S.repeat(X.size(0), 1, 1), X)
 
 
+class SetEncoder(nn.Module):
+    def __init__(self, embed_size, num_outputs, dim_output, 
+                 num_inds=32, hidden=128, num_heads=4, ln=False, dropout=0.1):
+        super(SetEncoder, self).__init__()
+
+        self.embedding = nn.Embedding(len(vocab), embed_size)
+
+        self.encoder = nn.Sequential(
+                ISAB(embed_size, hidden, num_heads, num_inds, ln=ln),
+                ISAB(hidden, hidden, num_heads, num_inds, ln=ln))
+        self.decoder = nn.Sequential(
+                PMA(hidden, num_heads, num_outputs, ln=ln),
+                SAB(hidden, hidden, num_heads, ln=ln),
+                SAB(hidden, hidden, num_heads, ln=ln),
+                nn.Linear(hidden, dim_output))
+
+    def forward(self, x):
+
+        x = torch.Tensor([to_onehot(i) for i in x]).int().cuda()
+        
+        x = self.embedding(x)                                   # (batch, num_inds, embed_size)
+
+        x = self.encoder(x)                                     # (batch, num_inds, hidden)
+
+        x = self.decoder(x)                                     # (batch, num_inds, dim_output)
+
+        return x
+
+
+
 class SetTransformer(nn.Module):
     def __init__(self, dim_input, num_outputs, dim_output,
             num_inds=32, dim_hidden=128, num_heads=4, ln=False, dropout=0.1, use_coattn=False, share=False):

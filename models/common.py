@@ -140,6 +140,60 @@ class CoAttention(nn.Module):
         # print(a.shape, b.shape)
 
         return a, b
+    
+
+class TowerBaseModel(nn.Module):
+    def __init__(self, embed_size, encoder, use_two_towers=False, use_coattn=False, fusion=0):
+        super(TowerBaseModel, self).__init__()
+
+        self.embed_size = embed_size
+        self.use_two_towers = use_two_towers
+        self.use_coattn = use_coattn
+        self.fusion = fusion                             # 0 - concat ; 1 - dot ; 2 - add dot
+
+        if self.use_two_towers==True:
+            self.encoder_para, self.encoder_epi = encoder
+        else:
+            self.encoder = encoder
+
+        if self.use_coattn==True:
+            self.coattn = CoAttention(embed_size=embed_size, output_size=embed_size)
+
+        if self.fusion==2:
+            self.scale_coef = nn.Parameter(torch.ones(1))
+
+    def forward(self, para, epi):
+
+        if self.use_two_towers==True:
+            para = self.encoder_para(para)
+            epi = self.encoder_epi(epi)
+        else:
+            para = self.encoder(para)
+            epi = self.encoder(epi)
+
+        # (batch, len, embed_size)
+
+        if self.use_coattn==True:
+            para, epi = self.coattn(para, epi)
+
+        # (batch, len, embed_size)
+
+        para = torch.nn.functional.normalize(para, p=2, dim=1)
+        epi = torch.nn.functional.normalize(epi, p=2, dim=1)
+
+        # (batch, len, embed_size)
+
+        para = torch.mean(para, dim=1)
+        epi = torch.mean(epi, dim=1)
+
+        if self.fusion==0:
+            x = torch.cat([para, epi], dim=1)
+        elif self.fusion==1:
+            x = para * epi
+        elif self.fusion==2:
+            x = para + epi + (para * epi) * self.scale_coef
+
+        return x
 
 
 # ngram representation
