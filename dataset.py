@@ -19,7 +19,7 @@ def get_random_sequence(length=48):
     return antigen_neg
 
 
-def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48):
+def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48, use_cache=False, use_pair=False):
     
     """process original data to format in pairs
 
@@ -30,6 +30,7 @@ def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48)
     :param seq_clip_mode: padding antigen seq if shorter than L else 0 - random sampling / 1 - k nearest amino acids, defaults to 1
     :param neg_sample_mode: 0-random sampling from dataset / 1 - random sequence / 2 - choose from BLAST, defaults to 1
     :return: [(paratope, antigen_pos, 1), (paratope, antigen_neg, 0), ...]
+    :return: [(paratope, antigen_pos, antigen_neg)]
     """
     
     pair_data = []
@@ -40,13 +41,18 @@ def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48)
         pass
     # 1 - k nearest amino acids
     elif seq_clip_mode==1:
-        data = get_knearest_epi(data, K=K)
-        pickle.dump(data, open("./data/tmp_knnepi.pkl", "wb"))
+        if use_cache==False:
+            data = get_knearest_epi(data, K=K)
+            pickle.dump(data, open("./data/tmp_knnepi.pkl", "wb"))
+        else:
+            print("loading ./data/tmp_knnepi.pkl as data containing knn epitope")
+            data = pickle.load(open("./data/tmp_knnepi.pkl", "rb"))
     else:
         print("Not Implemented seq_clip_mode number!")
 
 
     print("Start getting pair data...")
+    print("seq_clip_mode: {}\tneg_sample_mode: {}\tuse_pair: {}\t".format(seq_clip_mode, neg_sample_mode, use_pair))
     for i in tqdm(range(len(data))):
 
         # paratope
@@ -110,19 +116,30 @@ def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48)
 
         # append to pair_data after removing redundant samples
         # redundancy - 1. >=90%sim for paratope; 2. >=90%sim for epitope; 3. same_label
-        redundant_pos = False
-        redundant_neg = False
-        for i in range(len(pair_data)):
-            if seq_sim(pair_data[i][0], paratope)>=0.9 and seq_sim(pair_data[i][1], antigen_pos)>=0.9 and pair_data[i][2]==1:
-                redundant_pos = True
-                break
-            if seq_sim(pair_data[i][0], paratope)>=0.9 and seq_sim(pair_data[i][1], antigen_neg)>=0.9 and pair_data[i][2]==0:
-                redundant_neg = True
-                break
-        if redundant_pos==False:
-            pair_data.append((paratope, antigen_pos, 1))
-        if redundant_neg==False:
-            pair_data.append((paratope, antigen_neg, 0))
+
+        if use_pair==False:
+            redundant_pos = False
+            redundant_neg = False
+            for i in range(len(pair_data)):
+                if seq_sim(pair_data[i][0], paratope)>=0.9 and seq_sim(pair_data[i][1], antigen_pos)>=0.9 and pair_data[i][2]==1:
+                    redundant_pos = True
+                    break
+                if seq_sim(pair_data[i][0], paratope)>=0.9 and seq_sim(pair_data[i][1], antigen_neg)>=0.9 and pair_data[i][2]==0:
+                    redundant_neg = True
+                    break
+            if redundant_pos==False:
+                pair_data.append((paratope, antigen_pos, 1))
+            if redundant_neg==False:
+                pair_data.append((paratope, antigen_neg, 0))
+        else:
+            redundant = False
+            for i in range(len(pair_data)):
+                if seq_sim(pair_data[i][0], paratope)>=0.9 and \
+                   seq_sim(pair_data[i][1], antigen_pos)>=0.9 and \
+                   seq_sim(pair_data[i][2], antigen_neg)>=0.9:
+                    redundant = True
+            if redundant==False:
+                pair_data.append((paratope, antigen_pos, antigen_neg))
         
     return pair_data
 
@@ -171,6 +188,27 @@ def collate_fn(batch, mode=0, use_augment=False):
         new_batch = [paras, epis, labels]
 
         return new_batch
+    
+def pair_collate_fn(batch, mode=0):
+
+    paras = [b[0] for b in batch]
+    epis_pos = [b[1] for b in batch]
+    epis_neg = [b[2] for b in batch]
+
+
+    # +ABCD-###
+    if mode==0:
+        max_len = max(max(list(map(lambda x:len(x), paras))), 
+                      max(list(map(lambda x:len(x), epis_pos))), 
+                      max(list(map(lambda x:len(x), epis_neg))))
+
+        paras = ["+"+i.strip("#")+"-"+"#"*(max_len-len(i.strip("#"))) for i in paras]
+        epis_pos = ["+"+i.strip("#")+"-"+"#"*(max_len-len(i.strip("#"))) for i in epis_pos]
+        epis_neg = ["+"+i.strip("#")+"-"+"#"*(max_len-len(i.strip("#"))) for i in epis_neg]
+
+        new_batch = [paras, epis_pos, epis_neg]
+
+        return new_batch
 
 
 def my_collate_fn1(batch):
@@ -196,18 +234,21 @@ class SAbDabDataset(torch.utils.data.Dataset):
             save_path=None, \
             K=48, \
             data_augment=False, \
-            augment_ratio=0.5
+            augment_ratio=0.5, \
+            use_cache=False, \
+            use_pair=False
         ):
         # load folds if existing else preprocessing
         if folds_path==None:
             print("folds_path none, preprocessing...")
             self.pair_data = get_pair(data=data, epi_seq_length=epi_seq_length, \
-                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode, K=K)
+                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode, K=K, use_pair=use_pair, \
+                use_cache=use_cache)
             if save_path!=None:
                 pickle.dump(self.pair_data, open(save_path, "wb"))
             else:
-                print("save to ./data/processed_data_clip{}_neg{}.pkl".format(seq_clip_mode, neg_sample_mode))
-                pickle.dump(self.pair_data, open("./data/processed_data_clip{}_neg{}.pkl".format(seq_clip_mode, neg_sample_mode), "wb"))
+                print("save to ./data/processed_data_clip{}_neg{}_usepair{}.pkl".format(seq_clip_mode, neg_sample_mode, use_pair))
+                pickle.dump(self.pair_data, open("./data/processed_data_clip{}_neg{}_usepair{}.pkl".format(seq_clip_mode, neg_sample_mode, use_pair), "wb"))
         else:
             print("loading preprocessed data from {}".format(folds_path))
             self.pair_data = pickle.load(open(folds_path, "rb"))
@@ -216,9 +257,12 @@ class SAbDabDataset(torch.utils.data.Dataset):
             random.shuffle(self.pair_data)
 
         self.is_train_test_full = is_train_test_full
+        self.use_pair = use_pair
 
-        self.label = torch.Tensor([pair[-1] for pair in self.pair_data])
-        self.data = [(pair[0], pair[1]) for pair in self.pair_data]
+        if use_pair==False:
+            self.label = torch.Tensor([pair[-1] for pair in self.pair_data])
+            self.data = [(pair[0], pair[1]) for pair in self.pair_data]
+
 
         if self.is_train_test_full=="train" or self.is_train_test_full=="test":
 
@@ -249,24 +293,28 @@ class SAbDabDataset(torch.utils.data.Dataset):
                 # print(self.data.shape, self.data)
                 self.train_data = self.train_data + tmp
                 self.train_label = torch.hstack([self.train_label, torch.Tensor([0]*int(augment_ratio*len(self.train_data)))])
-        else:
-            pass
             
     def __len__(self):
-        if self.is_train_test_full=="train":
-            return len(self.train_data)
-        elif self.is_train_test_full=="test":
-            return len(self.test_data)
+        if self.use_pair==False:
+            if self.is_train_test_full=="train":
+                return len(self.train_data)
+            elif self.is_train_test_full=="test":
+                return len(self.test_data)
+            else:
+                return len(self.data)
         else:
-            return len(self.data)
+            return len(self.pair_data)
     
     def __getitem__(self, idx):
-        if self.is_train_test_full=="train":
-            return self.train_data[idx][0], self.train_data[idx][1], self.train_label[idx]
-        elif self.is_train_test_full=="test":
-            return self.test_data[idx][0], self.test_data[idx][1], self.test_label[idx]
+        if self.use_pair==False:
+            if self.is_train_test_full=="train":
+                return self.train_data[idx][0], self.train_data[idx][1], self.train_label[idx]
+            elif self.is_train_test_full=="test":
+                return self.test_data[idx][0], self.test_data[idx][1], self.test_label[idx]
+            else:
+                return self.data[idx][0], self.data[idx][1], self.label[idx]
         else:
-            return self.data[idx][0], self.data[idx][1], self.label[idx]
+            return self.pair_data[idx][0], self.pair_data[idx][1], self.pair_data[idx][2]
         
         
 # CoV-AbDab
@@ -276,6 +324,7 @@ class SeqDataset(torch.utils.data.Dataset):
                  kfold=10, 
                  holdout_fold=0, 
                  is_train_test_full="train"):
+
         self.data_df = pd.read_csv(data_path)
         self.is_train_test_full = is_train_test_full
         self.data = self.data_df.sample(frac=1, random_state=42)
@@ -301,7 +350,8 @@ class SeqDataset(torch.utils.data.Dataset):
             self.test_label = self.label_folds.pop(holdout_fold)
             self.train_data = pd.concat(self.data_folds)
             self.train_label = torch.hstack(self.label_folds)
-        else:
+        
+        if self.use_pair==True:
             pass
 
     def __len__(self):
