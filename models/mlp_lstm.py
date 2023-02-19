@@ -168,6 +168,32 @@ class BiLSTM_demo(nn.Module):
             x = self.output_layer(x)
             
             return x
+        
+
+class BiLSTMEncoder(nn.Module):
+    def __init__(self, embed_size=64, hidden=128, num_layers=2):
+        super(BiLSTMEncoder, self).__init__()
+
+        self.embed_size = embed_size
+        self.hidden = hidden
+        self.num_layers = num_layers
+
+        self.embedding = nn.Embedding(len(vocab), embed_size)
+
+        proj_size = int(hidden/num_layers) if num_layers>1 else int(hidden/2)
+        self.encoder = nn.LSTM(input_size=embed_size, hidden_size=hidden, 
+                               num_layers=num_layers, bidirectional=True, proj_size=proj_size)
+
+
+    def forward(self, x):
+        x = torch.Tensor([to_onehot(i) for i in x]).int().cuda()
+
+        x = self.embedding(x)
+        # (batch, len, hidden)
+        x = self.encoder(x)
+        # (batch, len, hidden)
+
+        return x
 
 
 class BiLSTM(nn.Module):

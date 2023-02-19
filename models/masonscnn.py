@@ -32,6 +32,25 @@ class CNNmodule(nn.Module):
         return conv_ft
 
 
+class CNNEncoder(nn.Module):
+    def __init__(self):
+        super(CNNEncoder, self).__init__()
+
+        self.encoder = CNNmodule(in_channel=len(vocab), kernel_width=len(vocab), l=100, out_channels=64)
+
+    def forward(self, x):
+
+        x = [seq_pad_clip(i, target_length=self.max_antibody_len) for i in x]
+
+        x = torch.Tensor([to_onehot(i, mode=1) for i in x]).float().cuda()
+
+        x = self.encoder(x)
+
+        # (Batch, 32)
+
+        return x
+
+
 class MasonsCNN(nn.Module):
     def __init__(self, amino_ft_dim, max_antibody_len, max_virus_len,
                  h_dim=512,

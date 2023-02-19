@@ -75,7 +75,7 @@ class PMA(nn.Module):
 
 class SetEncoder(nn.Module):
     def __init__(self, embed_size, num_outputs, dim_output, 
-                 num_inds=32, hidden=128, num_heads=4, ln=False, dropout=0.1):
+                 num_inds=6, hidden=128, num_heads=4, ln=False, dropout=0.1):
         super(SetEncoder, self).__init__()
 
         self.embedding = nn.Embedding(len(vocab), embed_size)

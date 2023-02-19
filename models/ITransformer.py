@@ -11,6 +11,28 @@ from utils import *
 from .common import *
 
 
+class IntTransEncoder(nn.Module):
+    def __init__(self, embed_size=64, num_encoder_layers=2, nhead=2, dropout=0.1):
+        super(IntTransEncoder, self).__init__()
+        
+        self.embedding = nn.Embedding(len(vocab), embed_size)
+
+        self.pos_enc = PositionalEncoding(d_model=embed_size, dropout=dropout)
+        layer = nn.TransformerEncoderLayer(d_model=embed_size, nhead=nhead, batch_first=True)
+        self.encoder = nn.TransformerEncoder(encoder_layer=layer, num_layers=num_encoder_layers)
+    
+    def forward(self, x):
+        
+        x = torch.Tensor([to_onehot(i) for i in x]).int().cuda()
+
+        x = self.embedding(x)
+        # (batch, len, embed_size)
+        x = self.encoder(x)        
+        # (batch, len, embed_size)
+        
+        return x
+
+
 class InteractTransformer(nn.Module):
     def __init__(self, embed_size=64, num_encoder_layers=2, nhead=2, dropout=0.1, use_coattn=False):
         super(InteractTransformer, self).__init__()
