@@ -40,7 +40,7 @@ class CNNEncoder(nn.Module):
 
     def forward(self, x):
 
-        x = [seq_pad_clip(i, target_length=self.max_antibody_len) for i in x]
+        x = [seq_pad_clip(i, target_length=100) for i in x]
 
         x = torch.Tensor([to_onehot(i, mode=1) for i in x]).float().cuda()
 
