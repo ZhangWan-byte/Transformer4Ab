@@ -190,7 +190,7 @@ class BiLSTMEncoder(nn.Module):
 
         x = self.embedding(x)
         # (batch, len, hidden)
-        x = self.encoder(x)
+        x, _ = self.encoder(x)
         # (batch, len, hidden)
 
         return x

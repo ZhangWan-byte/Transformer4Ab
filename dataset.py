@@ -323,15 +323,21 @@ class SeqDataset(torch.utils.data.Dataset):
                  data_path="../../MSAI_Project/codes/data/sequence_pairs.json", 
                  kfold=10, 
                  holdout_fold=0, 
-                 is_train_test_full="train"):
+                 is_train_test_full="train", 
+                 use_pair=False, 
+                 balance_samples=False, 
+                 balance_ratio=1):
+        
+        self.use_pair = use_pair
+        self.balance_samples = balance_samples
 
         self.data_df = pd.read_csv(data_path)
+        if self.balance_samples:
+            self.balance(ratio=balance_ratio)
         self.is_train_test_full = is_train_test_full
         self.data = self.data_df.sample(frac=1, random_state=42)
 
         self.label = torch.Tensor(self.data["Class"])
-        # self.data = pd.concat([self.data_df["Paratope"].map(toOneHot), \
-        #                        self.data_df["Epitope"].map(toOneHot)], axis=1)
         self.data = pd.concat([self.data_df["Paratope"], \
                                self.data_df["Epitope"]], axis=1)
 
@@ -352,24 +358,73 @@ class SeqDataset(torch.utils.data.Dataset):
             self.train_label = torch.hstack(self.label_folds)
         
         if self.use_pair==True:
-            pass
+            self.pair_data = []
+
+            for i in range(len(self.data)):
+                if self.label[i]==1:
+                    paratope = self.data.iloc[i][0]
+                    antigen_pos = self.data.iloc[i][1]
+
+                    j = random.randint(0, len(self.data)-1)
+                    antigen_neg = self.data.iloc[j][1]
+                    while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                        j = random.randint(0, len(self.data)-1)
+                        antigen_neg = self.data.iloc[j][1]
+                    
+                    self.pair_data.append((paratope, antigen_pos, antigen_neg))
+
+    def balance(self, ratio):
+        """
+        ratio: ratio of neg:pos
+        """
+        num_pos = len(self.data_df[self.data_df["Class"]==1])
+        num_neg = len(self.data_df[self.data_df["Class"]==0])
+        num_neg_sample = num_pos*ratio - num_neg
+
+        # sample negative para-epi pairs and add into dataset
+        append_samples = []
+        self.data_df = self.data_df.sample(frac=1, random_state=42)
+        for i in range(num_neg_sample):
+            if self.data_df.iloc[i]["Class"]==1:
+                paratope = self.data_df.iloc[i]["Paratope"]
+                antigen_pos = self.data_df.iloc[i]["Epitope"]
+                j = random.randint(0, len(self.data_df)-1)
+                antigen_neg = self.data_df.iloc[j]["Epitope"]
+                while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                    j = random.randint(0, len(self.data_df)-1)
+                    antigen_neg = self.data_df.iloc[j][1]
+                    
+                append_samples.append((paratope, antigen_neg))
+
+        self.df_append = pd.DataFrame({'Index': [311+i for i in range(len(append_samples))], 
+                                       'AB_name': ['neg samples']*len(append_samples), 
+                                       'Class': [0]*len(append_samples), 
+                                       'Paratope': [i[0] for i in append_samples],
+                                       'Epitope': [i[1] for i in append_samples]})
+        self.data_df = self.data_df.append(self.df_append, ignore_index=True)
+
 
     def __len__(self):
-        if self.is_train_test_full=="train":
-            return self.train_data.shape[0]
-        elif self.is_train_test_full=="test":
-            return self.test_data.shape[0]
+        if self.use_pair==False:
+            if self.is_train_test_full=="train":
+                return self.train_data.shape[0]
+            elif self.is_train_test_full=="test":
+                return self.test_data.shape[0]
+            else:
+                return self.data.shape[0]
         else:
-            return self.data.shape[0]
+            return len(self.pair_data)
     
     def __getitem__(self, idx):
-        if self.is_train_test_full=="train":
-            return self.train_data.iloc[idx][0], self.train_data.iloc[idx][1], self.train_label[idx]
-        elif self.is_train_test_full=="test":
-            return self.test_data.iloc[idx][0], self.test_data.iloc[idx][1], self.test_label[idx]
+        if self.use_pair==False:
+            if self.is_train_test_full=="train":
+                return self.train_data.iloc[idx][0], self.train_data.iloc[idx][1], self.train_label[idx]
+            elif self.is_train_test_full=="test":
+                return self.test_data.iloc[idx][0], self.test_data.iloc[idx][1], self.test_label[idx]
+            else:
+                return self.data.iloc[idx][0], self.data.iloc[idx][1], self.label[idx]
         else:
-            return self.data.iloc[idx][0], self.data.iloc[idx][1], self.label[idx]
-
+            return self.pair_data[idx][0], self.pair_data[idx][1], self.pair_data[idx][2]
 
 if __name__=="__main__":
     # SAbDabDataset
