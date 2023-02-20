@@ -143,25 +143,29 @@ class CoAttention(nn.Module):
     
 
 class TowerBaseModel(nn.Module):
-    def __init__(self, embed_size, encoder, use_two_towers=False, use_coattn=False, fusion=0, dropout=0.1):
+    def __init__(self, embed_size, hidden, encoder, use_two_towers=False, mid_coattn=False, use_coattn=False, fusion=0, dropout=0.1):
         super(TowerBaseModel, self).__init__()
 
         self.embed_size = embed_size
         self.use_two_towers = use_two_towers
+        self.mid_coattn = mid_coattn
         self.use_coattn = use_coattn
         self.fusion = fusion                             # 0 - concat ; 1 - dot ; 2 - add dot
         self.dropout = dropout
 
         if self.use_two_towers==True:
             self.encoder_para, self.encoder_epi = encoder
-            self.encoder_para.train()
-            self.encoder_epi.train()
+            # self.encoder_para.train()
+            # self.encoder_epi.train()
         else:
             self.encoder = encoder
-            self.encoder.train()
+            # self.encoder.train()
 
         if self.use_coattn==True:
-            self.coattn = CoAttention(embed_size=embed_size, output_size=embed_size)
+            if self.mid_coattn==True:
+                self.coattn = CoAttention(embed_size=hidden, output_size=hidden)
+            else:
+                self.coattn = CoAttention(embed_size=embed_size, output_size=embed_size)
 
         if self.fusion==2:
             self.scale_coef = nn.Parameter(torch.ones(1))
@@ -176,17 +180,50 @@ class TowerBaseModel(nn.Module):
 
     def forward(self, para, epi):
 
-        if self.use_two_towers==True:
-            para = self.encoder_para(para)
-            epi = self.encoder_epi(epi)
+        if self.mid_coattn==True:
+            if self.use_two_towers==True:
+                para = torch.Tensor([to_onehot(i) for i in para]).int().cuda()
+                epi = torch.Tensor([to_onehot(i) for i in epi]).int().cuda()
+
+                para = self.encoder.embedding(para)
+                epi = self.encoder.embedding(epi)
+
+                para = self.encoder_para.encoder(para)
+                epi = self.encoder_epi.encoder(epi)
+
+                if self.use_coattn==True:
+                    para, epi = self.coattn(para, epi)
+
+                para = self.encoder_para.decoder(para)
+                epi = self.encoder_epi.decoder(epi)
+            else:
+                para = torch.Tensor([to_onehot(i) for i in para]).int().cuda()
+                epi = torch.Tensor([to_onehot(i) for i in epi]).int().cuda()
+
+                para = self.encoder.embedding(para)
+                epi = self.encoder.embedding(epi)
+
+                para = self.encoder.encoder(para)
+                epi = self.encoder.encoder(epi)
+
+                if self.use_coattn==True:
+                    para, epi = self.coattn(para, epi)
+
+                para = self.encoder.decoder(para)
+                epi = self.encoder.decoder(epi)
+                
         else:
-            para = self.encoder(para)
-            epi = self.encoder(epi)
+            if self.use_two_towers==True:
+                para = self.encoder_para(para)
+                epi = self.encoder_epi(epi)
+            else:
+                para = self.encoder(para)
+                epi = self.encoder(epi)
 
-        # (batch, len, embed_size)
+            # (batch, len, embed_size)
 
-        if self.use_coattn==True:
-            para, epi = self.coattn(para, epi)
+            if self.use_coattn==True:
+                para, epi = self.coattn(para, epi)
 
         # (batch, len, embed_size)
 
