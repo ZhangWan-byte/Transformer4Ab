@@ -19,7 +19,7 @@ def get_random_sequence(length=48):
     return antigen_neg
 
 
-def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48, use_cache=False, use_pair=False):
+def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, num_neg=1, K=48, use_cache=False, use_pair=False):
     
     """process original data to format in pairs
 
@@ -70,25 +70,32 @@ def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48,
             print("Not Implemented seq_clip_mode!")
 
         # epitope - negative sample
+        antigen_negs = []
         # 0 - random sample amino acids
         if seq_clip_mode==0:
             # 0 - sample from all epitope seqs
             if neg_sample_mode==0:
-                j = random.randint(0, len(data)-1)
-                antigen_neg = "/".join(data[j]["Aseq"])
                 
-                # re-sample if sim score >= 0.9
-                while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                for _ in range(num_neg):
                     j = random.randint(0, len(data)-1)
                     antigen_neg = "/".join(data[j]["Aseq"])
+                    
+                    # re-sample if sim score >= 0.9
+                    while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                        j = random.randint(0, len(data)-1)
+                        antigen_neg = "/".join(data[j]["Aseq"])
 
-                antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
+                    antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
+                    antigen_negs.append(antigen_neg)
             # 1 - random sequence
             elif neg_sample_mode==1:
-                # candidates = "".join([k for k in vocab.keys()])
-                # antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
-                antigen_neg = get_random_sequence(length=epi_seq_length)
-                antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
+                
+                for _ in range(num_neg):
+                    # candidates = "".join([k for k in vocab.keys()])
+                    # antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
+                    antigen_neg = get_random_sequence(length=epi_seq_length)
+                    antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
+                    antigen_negs.append(antigen_neg)
             # 2 - BLAST
             else:
                 print("Not Implemented BLAST!")
@@ -97,18 +104,22 @@ def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48,
         elif seq_clip_mode==1:
             # 0 - sample from all epitope seqs
             if neg_sample_mode==0:
-                j = random.randint(0, len(data)-1)
-                antigen_neg = data[j]["epitope"]
-                
-                while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                for _ in range(num_neg):
                     j = random.randint(0, len(data)-1)
                     antigen_neg = data[j]["epitope"]
+                    
+                    while seq_sim(antigen_neg, antigen_pos)>=0.5:
+                        j = random.randint(0, len(data)-1)
+                        antigen_neg = data[j]["epitope"]
 
-                antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
+                    antigen_neg = seq_pad_clip(seq=antigen_neg, target_length=epi_seq_length)
+                    antigen_negs.append(antigen_neg)
             # 1 - random sequence
             elif neg_sample_mode==1:
-                candidates = "".join([k for k in vocab.keys()])
-                antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
+                for _ in range(num_neg):
+                    candidates = "".join([k for k in vocab.keys()])
+                    antigen_neg = "".join(random.choices(candidates, k=epi_seq_length))
+                    antigen_negs.append(antigen_neg)
             # 2 - BLAST
             else:
                 print("Not Implemented BLAST!")
@@ -119,27 +130,35 @@ def get_pair(data, epi_seq_length=800, seq_clip_mode=1, neg_sample_mode=1, K=48,
 
         if use_pair==False:
             redundant_pos = False
-            redundant_neg = False
+            redundant_negs = [False]*num_neg
             for i in range(len(pair_data)):
                 if seq_sim(pair_data[i][0], paratope)>=0.9 and seq_sim(pair_data[i][1], antigen_pos)>=0.9 and pair_data[i][2]==1:
                     redundant_pos = True
                     break
-                if seq_sim(pair_data[i][0], paratope)>=0.9 and seq_sim(pair_data[i][1], antigen_neg)>=0.9 and pair_data[i][2]==0:
-                    redundant_neg = True
-                    break
+                t = 0
+                for antigen_neg in antigen_negs:
+                    if seq_sim(pair_data[i][0], paratope)>=0.9 and seq_sim(pair_data[i][1], antigen_neg)>=0.9 and pair_data[i][2]==0:
+                        redundant_negs[t] = True
+                    t +=1
             if redundant_pos==False:
                 pair_data.append((paratope, antigen_pos, 1))
-            if redundant_neg==False:
-                pair_data.append((paratope, antigen_neg, 0))
+            for t in range(len(redundant_negs)):
+                if redundant_negs[t]==False:
+                    pair_data.append((paratope, antigen_negs[t], 0))
         else:
-            redundant = False
+            redundant = [False]*num_neg
             for i in range(len(pair_data)):
-                if seq_sim(pair_data[i][0], paratope)>=0.9 and \
-                   seq_sim(pair_data[i][1], antigen_pos)>=0.9 and \
-                   seq_sim(pair_data[i][2], antigen_neg)>=0.9:
-                    redundant = True
-            if redundant==False:
-                pair_data.append((paratope, antigen_pos, antigen_neg))
+                t = 0
+                for antigen_neg in antigen_negs:
+                    if seq_sim(pair_data[i][0], paratope)>=0.9 and \
+                       seq_sim(pair_data[i][1], antigen_pos)>=0.9 and \
+                       seq_sim(pair_data[i][2], antigen_neg)>=0.9:
+                            redundant[t] = True
+                    t += 1
+
+            for t in range(len(redundant)):
+                if redundant[t]==False:
+                    pair_data.append((paratope, antigen_pos, antigen_negs[t]))
         
     return pair_data
 
@@ -236,13 +255,14 @@ class SAbDabDataset(torch.utils.data.Dataset):
             data_augment=False, \
             augment_ratio=0.5, \
             use_cache=False, \
-            use_pair=False
+            use_pair=False, \
+            num_neg=1
         ):
         # load folds if existing else preprocessing
         if folds_path==None:
             print("folds_path none, preprocessing...")
             self.pair_data = get_pair(data=data, epi_seq_length=epi_seq_length, \
-                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode, K=K, use_pair=use_pair, \
+                seq_clip_mode=seq_clip_mode, neg_sample_mode=neg_sample_mode, num_neg=num_neg, K=K, use_pair=use_pair, \
                 use_cache=use_cache)
             if save_path!=None:
                 pickle.dump(self.pair_data, open(save_path, "wb"))
