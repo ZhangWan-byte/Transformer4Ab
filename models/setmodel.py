@@ -104,11 +104,22 @@ class SetEncoder(nn.Module):
 
 
 class SetTransformer(nn.Module):
-    def __init__(self, dim_input, num_outputs, dim_output,
-            num_inds=32, dim_hidden=128, num_heads=4, ln=False, dropout=0.1, use_coattn=False, share=False):
+    def __init__(self, 
+                 dim_input, 
+                 num_outputs, 
+                 dim_output, 
+                 num_inds=32, 
+                 dim_hidden=128, 
+                 num_heads=4, 
+                 ln=False, 
+                 dropout=0.1, 
+                 use_coattn=False, 
+                 share=False, 
+                 use_BSS=False):
         super(SetTransformer, self).__init__()
 
         self.use_coattn = use_coattn
+        self.use_BSS = use_BSS
         
         self.embedding = nn.Embedding(len(vocab), dim_input)
         
@@ -164,6 +175,9 @@ class SetTransformer(nn.Module):
             epi = self.enc(epi)
             # (batch, seq_len, hidden) / (batch, num_inds, dim_hidden)
 
+            if self.use_coattn==True:
+                para, epi = self.co_attn(para, epi)
+
             # decoder
             para = self.dec(para)
             epi = self.dec(epi)
@@ -174,14 +188,17 @@ class SetTransformer(nn.Module):
             epi = self.epi_enc(epi)
             # (batch, seq_len, hidden) / (batch, num_inds, dim_hidden)
 
+            if self.use_coattn==True:
+                para, epi = self.co_attn(para, epi)
+
             # decoder
             para = self.para_dec(para)
             epi = self.epi_dec(epi)
             # (batch, seq_len, embed_size) / (batch, num_inds, dim_output)
 
 
-        if self.use_coattn==True:
-            para, epi = self.co_attn(para, epi)
+        # if self.use_coattn==True:
+        #     para, epi = self.co_attn(para, epi)
 
         # sentence representation
         para = torch.mean(para, dim=1)
@@ -191,12 +208,32 @@ class SetTransformer(nn.Module):
         epi = epi.squeeze(1)
         # (batch, embed_size) / (batch, dim_output)
 
+        if self.use_BSS:
+            BSS = 0
+            u1, s1, v1 = torch.svd(para.t())
+            ll1 = s1.size(0)
+            BSS += torch.pow(s1[ll1-1], 2)
+
+            u2, s2, v2 = torch.svd(epi.t())
+            ll2 = s2.size(0)
+            BSS += torch.pow(s2[ll2-1], 2)
+
         # output
         x = para * epi
         x = self.output_layer(x)
 
-        return x
+        if self.use_BSS:
+            return x, BSS
+        else:
+            return x
+        
 
+
+
+
+
+
+# below are trials
 
 class SetCoAttnTransformer(nn.Module):
     def __init__(self, dim_input, num_outputs, dim_output,

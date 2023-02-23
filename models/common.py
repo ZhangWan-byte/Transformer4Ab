@@ -143,7 +143,15 @@ class CoAttention(nn.Module):
     
 
 class TowerBaseModel(nn.Module):
-    def __init__(self, embed_size, hidden, encoder, use_two_towers=False, mid_coattn=False, use_coattn=False, fusion=0, dropout=0.1):
+    def __init__(self, 
+                 embed_size, 
+                 hidden, 
+                 encoder, 
+                 use_two_towers=False, 
+                 mid_coattn=False, 
+                 use_coattn=False, 
+                 fusion=0, 
+                 dropout=0.1):
         super(TowerBaseModel, self).__init__()
 
         self.embed_size = embed_size
