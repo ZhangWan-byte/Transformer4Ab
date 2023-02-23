@@ -598,7 +598,7 @@ def cov_train(config):
                     for name, param in model.named_parameters():
                         if 'bias' not in name:
                             param_l1_loss += torch.norm(param, p=1)
-                    param_l1_loss = l1_coef * param_l1_loss
+                    param_l1_loss = config.l1_coef * param_l1_loss
                     loss += param_l1_loss
                 else:
                     print("wrong use_reg! only 0 or 1!")
