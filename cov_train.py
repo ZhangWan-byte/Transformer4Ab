@@ -16,42 +16,42 @@ from utils import *
 from models import *
 
 
-def prepare_lstm(model_name):
+def prepare_lstm(model_name, data, config):
     pass
 
-def prepare_textcnn(model_name):
+def prepare_textcnn(model_name, data, config):
     pass
 
-def prepare_masonscnn(model_name):
+def prepare_masonscnn(model_name, data, config):
     pass
 
-def prepare_ag_fast_parapred(model_name):
+def prepare_ag_fast_parapred(model_name, data, config):
     pass
 
-def prepare_pipr(model_name):
+def prepare_pipr(model_name, data, config):
     pass
 
-def prepare_resppi(model_name):
+def prepare_resppi(model_name, data, config):
     pass
 
-def prepare_deepaai(model_name):
+def prepare_deepaai(model_name, data, config):
     pass
 
-def prepare_pesi(model_name):
+def prepare_pesi(model_name, data, config):
     pass
 
 def cov_train(config):
 
 
-    if config.use_fine_tune==True:
-        model_name += "_ft"
+    if config["use_fine_tune"]==True:
+        config["model_name"] += "_ft"
 
-        if config.use_pair==True:
-            model_name += "_pairPreTrain"
+        if config["use_pair"]==True:
+            config["model_name"] += "_pairPreTrain"
 
-    os.makedirs("./results/CoV-AbDab/{}/".format(model_name), exist_ok=True)
+    os.makedirs("./results/CoV-AbDab/{}/".format(config["model_name"]), exist_ok=True)
 
-    print("model name: {}".format(model_name))
+    print("model name: {}".format(config["model_name"]))
 
     kfold_labels = []
     kfold_preds = []
@@ -60,18 +60,18 @@ def cov_train(config):
         
         print("=========================================================")
         print("fold {} as val set".format(k_iter))
-        
-        train_dataset = SeqDataset(data_path="../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv", \
+        "../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv"
+        train_dataset = SeqDataset(data_path=config["data_path"], \
                                 kfold=10, holdout_fold=k_iter, is_train_test_full="train", \
-                                use_pair=False, balance_samples=False)
+                                use_pair=config["use_pair"], balance_samples=False)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=False, \
-                                                collate_fn=my_collate_fn2)
+                                                collate_fn=collate_fn)
 
-        test_dataset = SeqDataset(data_path="../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv", \
+        test_dataset = SeqDataset(data_path=config["data_path"], \
                                 kfold=10, holdout_fold=k_iter, is_train_test_full="test", \
-                                use_pair=False, balance_samples=False)
+                                use_pair=config["use_pair"], balance_samples=False)
         test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, \
-                                                collate_fn=my_collate_fn1)
+                                                collate_fn=collate_fn)
 
         if model_name=="demo":
             model = BiLSTM_demo(embed_size=32, hidden=64, num_layers=1, dropout=0.5, use_pretrain=False).cuda()
@@ -92,7 +92,7 @@ def cov_train(config):
         elif model_name=="masonscnn_ft":
             model = torch.load("./results/SAbDab/full/seq1_neg0/masonscnn/model_best.pth")
 
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.cnnmodule.named_parameters():
                     param.requires_grad = False
                 for name, param in model.cnnmodule2.named_parameters():
@@ -109,7 +109,7 @@ def cov_train(config):
             model = TowerBaseModel(embed_size=32, hidden=128, encoder=encoder, 
                                 use_two_towers=False, use_coattn=False, fusion=0).cuda()
             
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.encoder.named_parameters():
                     param.requires_grad = False
             
@@ -132,7 +132,7 @@ def cov_train(config):
             model = torch.load("./results/SAbDab/full/seq1_neg0/lstm/model_best.pth")
             model.train()
             
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.LSTM_para.named_parameters():
                     param.requires_grad = False
                 for name, param in model.LSTM_epi.named_parameters():
@@ -149,7 +149,7 @@ def cov_train(config):
             model = TowerBaseModel(embed_size=64, hidden=128, encoder=encoder, 
                                 use_two_towers=False, use_coattn=False, fusion=1).cuda()
             
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.encoder.named_parameters():
                     param.requires_grad = False
             
@@ -170,7 +170,7 @@ def cov_train(config):
             model = torch.load("./results/SAbDab/full/seq1_neg0/InteractTransformer/model_best.pth")
             model.train()
             
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.transformer_para.named_parameters():
                     param.requires_grad = False
                 for name, param in model.transformer_epi.named_parameters():
@@ -193,7 +193,7 @@ def cov_train(config):
             model = torch.load("./results/SAbDab/full/seq1_neg0/InteractCoAttnTransformer/model_best.pth")
             model.train()
         
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.transformer_para.named_parameters():
                     param.requires_grad = False
                 for name, param in model.transformer_epi.named_parameters():
@@ -210,7 +210,7 @@ def cov_train(config):
             model = TowerBaseModel(embed_size=32, hidden=128, encoder=encoder, 
                                 use_two_towers=False, use_coattn=True, fusion=1).cuda()
         
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.encoder.named_parameters():
                     param.requires_grad = False
             
@@ -257,7 +257,7 @@ def cov_train(config):
             model = torch.load("./results/SAbDab/full/seq1_neg0/SetTransformer/model_best.pth")
             model.train()
 
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.para_enc.named_parameters():
                     param.requires_grad = False
                 for name, param in model.para_dec.named_parameters():
@@ -287,7 +287,7 @@ def cov_train(config):
             l2_coef = 5e-4
             
         elif model_name=="SetCoAttnTransformer_ft":
-            if use_BSS==False:
+            if config["use_BSS"]==False:
     #             model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
     #             model.train()
 
@@ -328,8 +328,8 @@ def cov_train(config):
                 lr = 6e-5
                 l2_coef = 5e-4
 
-            elif use_BSS==True:
-                print(model_name, use_BSS)
+            elif config["use_BSS"]==True:
+                print(model_name, config["use_BSS"])
                 model = SetTransformer(dim_input=32, 
                                     num_outputs=32, 
                                     dim_output=32, 
@@ -374,7 +374,7 @@ def cov_train(config):
             encoder.train()
             model = TowerBaseModel(embed_size=32, hidden=128, encoder=encoder, use_two_towers=False, mid_coattn=True, use_coattn=True, fusion=1).cuda()
             
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.encoder.named_parameters():
                     param.requires_grad = False
             
@@ -405,7 +405,7 @@ def cov_train(config):
             model = torch.load("./results/SAbDab/full/seq1_neg0/SetModel/model_best.pth")
             model.train()
             
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.para_enc.named_parameters():
                     param.requires_grad = False
                 for name, param in model.para_dec.named_parameters():
@@ -439,7 +439,7 @@ def cov_train(config):
             model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnModel/model_best.pth")
             model.train()
             
-            if fix_FE==True:
+            if config["fix_FE"]==True:
                 for name, param in model.para_enc.named_parameters():
                     param.requires_grad = False
                 for name, param in model.para_dec.named_parameters():
@@ -577,23 +577,23 @@ def cov_train(config):
             for i, (para, epi, label) in enumerate(tqdm(train_loader)):
                 optimizer.zero_grad()
 
-                if use_BSS==False:
+                if config["use_BSS"]==False:
                     pred = model(para, epi)
-                elif use_BSS==True:
+                elif config["use_BSS"]==True:
                     pred, BSS = model(para, epi)
                 else:
                     pass
                     
                 loss = criterion(pred.view(-1), label.view(-1).cuda())
                 
-                if use_reg==0:
+                if config["use_reg"]==0:
                     param_l2_loss = 0
                     for name, param in model.named_parameters():
                         if 'bias' not in name:
                             param_l2_loss += torch.norm(param, p=2)
                     param_l2_loss = l2_coef * param_l2_loss
                     loss += param_l2_loss
-                elif use_reg==1:
+                elif config["use_reg"]==1:
                     param_l1_loss = 0
                     for name, param in model.named_parameters():
                         if 'bias' not in name:
@@ -604,12 +604,12 @@ def cov_train(config):
                     print("wrong use_reg! only 0 or 1!")
                     exit()
                 
-                if use_BSS==True:
+                if config["use_BSS"]==True:
                     loss += 0.001*BSS
 
                 loss.backward()
                 
-                torch.nn.utils.clip_grad_norm_(model.parameters(), clip_norm)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), config["clip_norm"])
 
                 optimizer.step()
 
@@ -628,14 +628,14 @@ def cov_train(config):
                 labels = []
                 val_loss_tmp = []
                 for i, (para, epi, label) in enumerate(test_loader):
-                    if use_BSS==False:
+                    if config["use_BSS"]==False:
                         pred = model(para, epi)
-                    elif use_BSS==True:
+                    elif config["use_BSS"]==True:
                         pred, BSS = model(para, epi)
                     
                     val_loss = criterion(pred.view(-1), label.view(-1).cuda())
                     
-                    if use_BSS==True:
+                    if config["use_BSS"]==True:
                         val_loss += 0.001*BSS
                     
                     preds.append(pred.detach().cpu().view(-1))
@@ -693,38 +693,40 @@ if __name__=='__main__':
 
     model_name = ["lstm", "textcnn", "masonscnn", "ag_fast_parapred", "pipr", "resppi", "deepaai"]
 
-
     # data type
-    clip_norm = 1
+    config = {
+        "clip_norm": 1, 
 
+        # fine-tuning params
+        "use_fine_tune": True,                  # load pre-trained weights as initialisation
+        "fix_FE": False,                        # only load pre-trained feature extractor weights
+        "use_pair": False,                      # whether using pairwise pre-training or not
 
-    # fine-tuning params
-    use_fine_tune = True            # load pre-trained weights as initialisation
-    fix_FE = False                  # only load pre-trained feature extractor weights
-    use_pair = False                # whether using pairwise pre-training or not
+        # training params
+        "use_reg": 0,                           # regularisation type: 0 - L2; 1 - L1
+        "use_BSS": False,                       # Batch Spectral Shrinkage regularisation
 
-
-    # training params
-    use_reg = 0                     # 0 - L2; 1 - L1
-    use_BSS = False                 # Batch Spectral Shrinkage regularisation
-
+    }
 
     # model name
     if model_name=="lstm":
-        config = prepare_lstm(model_name, data)
+        config = prepare_lstm(model_name, data, config)
     elif model_name=="textcnn":
-        config = prepare_textcnn(model_name, data)
+        config = prepare_textcnn(model_name, data, config)
     elif model_name=="masonscnn":
-        config = prepare_masonscnn(model_name, data)
+        config = prepare_masonscnn(model_name, data, config)
     elif model_name=="ag_fast_parapred":
-        config = prepare_ag_fast_parapred(model_name, data)
+        config = prepare_ag_fast_parapred(model_name, data, config)
     elif model_name=="pipr":
-        config = prepare_pipr(model_name, data)
+        config = prepare_pipr(model_name, data, config)
     elif model_name=="resppi":
-        config = prepare_resppi(model_name, data)
+        config = prepare_resppi(model_name, data, config)
     elif model_name=="deepaai":
-        config = prepare_deepaai(model_name, data)
+        config = prepare_deepaai(model_name, data, config)
     elif model_name=="pesi":
-        config = prepare_pesi(model_name, data)
+        config = prepare_pesi(model_name, data, config)
+
+    
+
 
     cov_train(config=config)
