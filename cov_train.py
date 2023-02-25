@@ -721,8 +721,9 @@ if __name__=='__main__':
         "use_BSS": False,                       # Batch Spectral Shrinkage regularisation
 
         # experiment params
-        "kfold": 10, 
-        "batch_size": 16, 
+        "ntimes": 3,                            # repeat ntimes of kfold
+        "kfold": 10,                            # kfold cross validation
+        "batch_size": 16,                       # batch size
 
         # model_params
         "model_name":model_name
@@ -752,7 +753,10 @@ if __name__=='__main__':
     print(config)
 
     # training
-    result = cov_train(config=config)
-
-    current_time = time.strftime('%Y-%m-%d-%H-%M', time.localtime())
-    pickle.dump("./results/CoV-AbDab/{}/result_{}.pkl".format(config["model_name"], current_time))
+    for i in range(config["ntimes"]):
+        print("Run {} times of {}fold".format(config["ntimes"], config["kfold"]))
+        result = cov_train(config=config)
+        current_time = time.strftime('%Y-%m-%d-%H-%M', time.localtime())
+        print("Results dump to: ")
+        print("./results/CoV-AbDab/{}_{}/result_{}.pkl".format(config["model_name"], i, current_time))
+        pickle.dump("./results/CoV-AbDab/{}_{}/result_{}.pkl".format(config["model_name"], i, current_time))
