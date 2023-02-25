@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -102,19 +103,19 @@ def cov_train(config):
     kfold_labels = []
     kfold_preds = []
 
-    for k_iter in range(10):
+    for k_iter in range(config["kfold"]):
         
         print("=========================================================")
         print("fold {} as val set".format(k_iter))
         
         train_dataset = SeqDataset(data_path=config["data_path"], \
-                                kfold=10, holdout_fold=k_iter, is_train_test_full="train", \
+                                kfold=config["kfold"], holdout_fold=k_iter, is_train_test_full="train", \
                                 use_pair=config["use_pair"], balance_samples=False)
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=False, \
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=False, \
                                                 collate_fn=collate_fn)
 
         test_dataset = SeqDataset(data_path=config["data_path"], \
-                                kfold=10, holdout_fold=k_iter, is_train_test_full="test", \
+                                kfold=config["kfold"], holdout_fold=k_iter, is_train_test_full="test", \
                                 use_pair=config["use_pair"], balance_samples=False)
         test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, \
                                                 collate_fn=collate_fn)
@@ -562,12 +563,12 @@ def cov_train(config):
     #         print("wrong model name!!!")
     #         break
 
-        print("model_name: {}".format(model_name))
+        print("model_name: {}".format(config["model_name"]))
 
-        print("model parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
+        print("model parameters: ", sum(p.numel() for p in config["model"].parameters() if p.requires_grad))
         
         criterion = nn.BCELoss()
-        optimizer = optim.Adam(model.parameters(), lr=config["lr"])#, weight_decay=wd)
+        optimizer = optim.Adam(config["model"].parameters(), lr=config["lr"])#, weight_decay=wd)
         # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=1e-6, last_epoch=-1)
 
         loss_buf = []
@@ -668,7 +669,7 @@ def cov_train(config):
                 
                 if np.mean(val_loss_tmp)<best_val_loss:
                     best_val_loss = np.mean(val_loss_tmp)
-                    torch.save(model, "./results/CoV-AbDab/{}/model_{}_best.pth".format(config["model_name"], k_iter))
+                    torch.save(config["model"], "./results/CoV-AbDab/{}/model_{}_best.pth".format(config["model_name"], k_iter))
                     np.save("./results/CoV-AbDab/{}/val_acc_{}_best.npy".format(config["model_name"], k_iter), acc)
                     np.save("./results/CoV-AbDab/{}/val_f1_{}_best.npy".format(config["model_name"], k_iter), f1)
                     np.save("./results/CoV-AbDab/{}/val_auc_{}_best.npy".format(config["model_name"], k_iter), auc)
@@ -692,16 +693,22 @@ def cov_train(config):
         
     #     break
 
+    res = evaluate(model_name=config["model_name"], data_type=config["data_type"], use_pair=config["use_pair"])
+
+    return res
+
 
 if __name__=='__main__':
 
     data = pd.read_csv("../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv")
 
-    model_name = ["lstm", "textcnn", "masonscnn", "ag_fast_parapred", "pipr", "resppi", "deepaai"]
+    # model_name = ["lstm", "textcnn", "masonscnn", "ag_fast_parapred", "pipr", "resppi", "deepaai"]
+    model_name = "lstm"
 
     config = {
         # data type
         "clip_norm": 1, 
+        "data_type": "seq1_neg0", 
         "data_path": "../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv", 
 
         # fine-tuning params
@@ -711,9 +718,17 @@ if __name__=='__main__':
 
         # training params
         "use_reg": 0,                           # regularisation type: 0 - L2; 1 - L1
-        "use_BSS": True,                        # Batch Spectral Shrinkage regularisation
+        "use_BSS": False,                       # Batch Spectral Shrinkage regularisation
+
+        # experiment params
+        "kfold": 10, 
+        "batch_size": 16, 
+
+        # model_params
+        "model_name":model_name
 
     }
+
 
     # model name
     if model_name=="lstm":
@@ -734,5 +749,10 @@ if __name__=='__main__':
         config = prepare_pesi(config)
 
 
+    print(config)
+
     # training
-    cov_train(config=config)
+    result = cov_train(config=config)
+
+    current_time = time.strftime('%Y-%m-%d-%H-%M', time.localtime())
+    pickle.dump("./results/CoV-AbDab/{}/result_{}.pkl".format(config["model_name"], current_time))
