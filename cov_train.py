@@ -700,7 +700,7 @@ def cov_train(config):
 
 if __name__=='__main__':
 
-    data = pd.read_csv("../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv")
+    # data = pd.read_csv("../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv")
 
     # model_name = ["lstm", "textcnn", "masonscnn", "ag_fast_parapred", "pipr", "resppi", "deepaai"]
     model_name = "lstm"
