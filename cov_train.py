@@ -65,13 +65,66 @@ def prepare_lstm(config):
         config["lr"] = 1e-4
         config["l2_coef"] = 5e-4
 
+    else:
+        print("Error Model Name")
+        exit()
+
     return config
 
 def prepare_textcnn(config):
     pass
 
 def prepare_masonscnn(config):
-    pass
+
+    if config["use_fine_tune"]==True:
+        config["model_name"] += "_ft"
+
+        if config["use_pair"]==True:
+            config["model_name"] += "_pairPreTrain"
+
+    if config["model_name"]=="masonscnn":
+        config["model"] = MasonsCNN(amino_ft_dim=len(vocab), 
+                                    max_antibody_len=100, 
+                                    max_virus_len=100, 
+                                    h_dim=512, 
+                                    dropout=0.1).cuda()
+        config["epochs"] = 100
+        config["lr"] = 1e-4
+        config["l2_coef"] = 5e-4
+        
+    elif config["model_name"]=="masonscnn_ft":
+        config["model"] = torch.load("./results/SAbDab/full/seq1_neg0/masonscnn/model_best.pth")
+
+        if config["fix_FE"]==True:
+            for name, param in model.cnnmodule.named_parameters():
+                param.requires_grad = False
+            for name, param in model.cnnmodule2.named_parameters():
+                param.requires_grad = False
+
+
+        config["epochs"] = 500
+        config["lr"] = 1e-4
+        config["l2_coef"] = 5e-4
+        
+    elif config["model_name"]=="masonscnn_ft_pairPreTrain":
+        
+        encoder = torch.load("./results/SAbDab/full/seq1_neg0/masonscnn_encoder/model_best.pth")
+        config["model"] = TowerBaseModel(embed_size=32, hidden=128, encoder=encoder, 
+                                         use_two_towers=False, use_coattn=False, fusion=0).cuda()
+        
+        if config["fix_FE"]==True:
+            for name, param in model.encoder.named_parameters():
+                param.requires_grad = False
+        
+        config["epochs"] = 500
+        config["lr"] = 1e-4
+        config["l2_coef"] = 5e-4
+
+    else:
+        print("Error Model Name")
+        exit()
+
+    return config
 
 def prepare_ag_fast_parapred(config):
     pass
@@ -96,6 +149,7 @@ def cov_train(config):
     #     if config["use_pair"]==True:
     #         config["model_name"] += "_pairPreTrain"
 
+    print("make folder ./results/CoV-AbDab/{}/".format(config["model_name"]))
     os.makedirs("./results/CoV-AbDab/{}/".format(config["model_name"]), exist_ok=True)
 
     print("model name: {}".format(config["model_name"]))
@@ -107,6 +161,24 @@ def cov_train(config):
         
         print("=========================================================")
         print("fold {} as val set".format(k_iter))
+
+        # model name
+        if model_name=="lstm":
+            config = prepare_lstm(config)
+        elif model_name=="textcnn":
+            config = prepare_textcnn(config)
+        elif model_name=="masonscnn":
+            config = prepare_masonscnn(config)
+        elif model_name=="ag_fast_parapred":
+            config = prepare_ag_fast_parapred(config)
+        elif model_name=="pipr":
+            config = prepare_pipr(config)
+        elif model_name=="resppi":
+            config = prepare_resppi(config)
+        elif model_name=="deepaai":
+            config = prepare_deepaai(config)
+        elif model_name=="pesi":
+            config = prepare_pesi(config)
         
         train_dataset = SeqDataset(data_path=config["data_path"], \
                                 kfold=config["kfold"], holdout_fold=k_iter, is_train_test_full="train", \
@@ -125,44 +197,7 @@ def cov_train(config):
             
     #         epochs = 100
     #         lr = 6e-5
-            
-    #     elif model_name=="masonscnn":
-    #         model = MasonsCNN(amino_ft_dim=len(vocab), 
-    #                         max_antibody_len=100, 
-    #                         max_virus_len=100, 
-    #                         h_dim=512, 
-    #                         dropout=0.1).cuda()
-    #         epochs = 100
-    #         lr = 1e-4
-    #         l2_coef = 5e-4
-            
-    #     elif model_name=="masonscnn_ft":
-    #         model = torch.load("./results/SAbDab/full/seq1_neg0/masonscnn/model_best.pth")
-
-    #         if config["fix_FE"]==True:
-    #             for name, param in model.cnnmodule.named_parameters():
-    #                 param.requires_grad = False
-    #             for name, param in model.cnnmodule2.named_parameters():
-    #                 param.requires_grad = False
-
-
-    #         epochs = 500
-    #         lr = 1e-4
-    #         l2_coef = 5e-4
-            
-    #     elif model_name=="masonscnn_ft_pairPreTrain":
-            
-    #         encoder = torch.load("./results/SAbDab/full/seq1_neg0/masonscnn_encoder/model_best.pth")
-    #         model = TowerBaseModel(embed_size=32, hidden=128, encoder=encoder, 
-    #                             use_two_towers=False, use_coattn=False, fusion=0).cuda()
-            
-    #         if config["fix_FE"]==True:
-    #             for name, param in model.encoder.named_parameters():
-    #                 param.requires_grad = False
-            
-    #         epochs = 500
-    #         lr = 1e-4
-    #         l2_coef = 5e-4
+        
         
     #     elif model_name=="InteractTransformer":
     #         model = InteractTransformer(embed_size=32, 
@@ -693,7 +728,7 @@ def cov_train(config):
         
     #     break
 
-    res = evaluate(model_name=config["model_name"], data_type=config["data_type"], use_pair=config["use_pair"])
+    res = evaluate(model_name=config["model_name"], kfold=config["kfold"])
 
     return res
 
@@ -703,7 +738,11 @@ if __name__=='__main__':
     # data = pd.read_csv("../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv")
 
     # model_name = ["lstm", "textcnn", "masonscnn", "ag_fast_parapred", "pipr", "resppi", "deepaai"]
-    model_name = "lstm"
+
+    # set_seed(seed=3407)
+    set_seed(seed=42)
+    # model_name = "lstm"
+    model_name = "masonscnn"
 
     config = {
         # data type
@@ -731,32 +770,13 @@ if __name__=='__main__':
     }
 
 
-    # model name
-    if model_name=="lstm":
-        config = prepare_lstm(config)
-    elif model_name=="textcnn":
-        config = prepare_textcnn(config)
-    elif model_name=="masonscnn":
-        config = prepare_masonscnn(config)
-    elif model_name=="ag_fast_parapred":
-        config = prepare_ag_fast_parapred(config)
-    elif model_name=="pipr":
-        config = prepare_pipr(config)
-    elif model_name=="resppi":
-        config = prepare_resppi(config)
-    elif model_name=="deepaai":
-        config = prepare_deepaai(config)
-    elif model_name=="pesi":
-        config = prepare_pesi(config)
-
-
     print(config)
 
     # training
     for i in range(config["ntimes"]):
         print("Run {} times of {}fold".format(config["ntimes"], config["kfold"]))
         result = cov_train(config=config)
-        current_time = time.strftime('%Y-%m-%d-%H-%M', time.localtime())
+        # current_time = time.strftime('%Y-%m-%d-%H-%M', time.localtime())
         print("Results dump to: ")
-        print("./results/CoV-AbDab/{}_{}/result_{}.pkl".format(config["model_name"], i, current_time))
-        pickle.dump("./results/CoV-AbDab/{}_{}/result_{}.pkl".format(config["model_name"], i, current_time))
+        print("./results/CoV-AbDab/{}/result_{}.pkl".format(config["model_name"], i))
+        pickle.dump(result, open("./results/CoV-AbDab/{}/result_{}.pkl".format(config["model_name"], i), "wb"))
