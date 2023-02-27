@@ -5,7 +5,10 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-import copy
+
+from dataset import *
+from utils import *
+from .common import *
 
 
 class AttentionLayer(nn.Module):
@@ -97,6 +100,13 @@ class AgFastParapred(nn.Module):
         :param batch_virus_len:     np array      batch
         :return:
         '''
+
+        batch_antibody_ft = [seq_pad_clip(i, target_length=self.max_antibody_len) for i in batch_antibody_ft]
+        batch_virus_ft = [seq_pad_clip(i, target_length=self.max_virus_len) for i in batch_virus_ft]
+
+        batch_antibody_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_antibody_ft]).float().cuda()
+        batch_virus_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_virus_ft]).float().cuda()
+
         assert batch_antibody_ft.size()[0] == batch_virus_ft.size()[0]
         batch_size = batch_antibody_ft.size()[0]
 
