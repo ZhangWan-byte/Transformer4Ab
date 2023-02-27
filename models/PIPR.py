@@ -2,11 +2,11 @@
 import torch.nn.functional as F
 import torch.nn as nn
 import torch
+from .common import *
 
-
-class PIPRCls(nn.Module):
+class PIPR(nn.Module):
     def __init__(self, protein_ft_one_hot_dim):
-        super(PIPRCls, self).__init__()
+        super(PIPR, self).__init__()
         self.protein_ft_dim = protein_ft_one_hot_dim
         self.hidden_num = 50
         self.kernel_size = 3
@@ -55,6 +55,13 @@ class PIPRCls(nn.Module):
         return output
 
     def forward(self, antibody_ft, virus_ft):
+
+        antibody_ft = [seq_pad_clip(i, target_length=100) for i in antibody_ft]
+        virus_ft = [seq_pad_clip(i, target_length=100) for i in virus_ft]
+
+        antibody_ft = torch.Tensor([to_onehot(i, mode=1) for i in antibody_ft]).float().cuda()
+        virus_ft = torch.Tensor([to_onehot(i, mode=1) for i in virus_ft]).float().cuda()
+
         for gru_layer in self.gru_list:
             gru_layer.flatten_parameters()
         # batch  * seq_len * feature

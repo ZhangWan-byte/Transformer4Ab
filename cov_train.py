@@ -232,7 +232,40 @@ def prepare_ag_fast_parapred(config):
     return config
 
 def prepare_pipr(config):
-    pass
+    if config["use_fine_tune"]==True:
+        config["model_name"] += "_ft"
+
+        if config["use_pair"]==True:
+            config["model_name"] += "_pairPreTrain"
+
+    if config["model_name"]=="pipr":
+        config["model"] = PIPR(protein_ft_one_hot_dim=len(vocab)).cuda()
+
+        config["epochs"] = 100
+        config["lr"] = 1e-4
+        config["l2_coef"] = 5e-4
+        
+    elif config["model_name"]=="pipr_ft":
+        config["model"] = torch.load("./results/SAbDab/full/seq1_neg0/pipr/model_best.pth")
+
+        if config["fix_FE"]==True:
+            # for name, param in model.cnnmodule.named_parameters():
+            #     param.requires_grad = False
+            # for name, param in model.cnnmodule2.named_parameters():
+            #     param.requires_grad = False
+            print("not implemented")
+            exit()
+
+
+        config["epochs"] = 500
+        config["lr"] = 1e-4
+        config["l2_coef"] = 5e-4
+
+    else:
+        print("Error Model Name")
+        exit()
+
+    return config
 
 def prepare_resppi(config):
     pass
@@ -300,7 +333,7 @@ def prepare_pesi(config):
         config["lr"] = 6e-5
         config["l2_coef"] = 5e-4
         
-    elif config["model_name"]=="SetCoAttnTransformer_ft":
+    elif config["model_name"]=="pesi_ft":
         if config["use_BSS"]==False:
 #             model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
 #             model.train()
@@ -863,7 +896,8 @@ if __name__=='__main__':
     # model_name = "lstm"
     # model_name = "textcnn"
     # model_name = "ag_fast_parapred"
-    model_name = "pesi"
+    model_name = "pipr"
+    # model_name = "pesi"
     
 
     config = {
