@@ -3,6 +3,10 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 
+from dataset import *
+from utils import *
+from .common import *
+
 
 class TextInception(nn.Module):
     def __init__(self, in_channel, kernel_width):
@@ -33,12 +37,12 @@ class TextInception(nn.Module):
         return cat_ft
 
 
-class TextCNNCls(nn.Module):
+class TextCNN(nn.Module):
     def __init__(self, amino_ft_dim, max_antibody_len, max_virus_len,
                  h_dim=512,
                  dropout=0.1,
                  ):
-        super(TextCNNCls, self).__init__()
+        super(TextCNN, self).__init__()
         self.amino_ft_dim = amino_ft_dim
         self.h_dim = h_dim
         self.dropout = dropout
@@ -60,6 +64,15 @@ class TextCNNCls(nn.Module):
         :return:
         '''
 
+        # embedding
+        batch_antibody_ft = torch.Tensor([to_onehot(i) for i in batch_antibody_ft]).int().cuda()
+        batch_virus_ft = torch.Tensor([to_onehot(i) for i in batch_virus_ft]).int().cuda()
+        
+        batch_antibody_ft = self.embedding(batch_antibody_ft)
+        batch_virus_ft = self.embedding(batch_virus_ft)
+        # (batch, seq_len, embed_size) / (batch, num_inds, dim_input)
+
+
         batch_size = batch_antibody_ft.size()[0]
         antibody_ft = self.text_inception(batch_antibody_ft).view(batch_size, -1)
         virus_ft = self.text_inception2(batch_virus_ft).view(batch_size, -1)
@@ -70,4 +83,5 @@ class TextCNNCls(nn.Module):
         pair_ft = self.out_linear1(pair_ft)
         pair_ft = self.activation(pair_ft)
         pred = self.out_linear2(pair_ft)
+
         return torch.sigmoid(pred)

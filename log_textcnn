@@ -1,0 +1,20 @@
+nohup: ignoring input
+{'clip_norm': 1, 'data_type': 'seq1_neg0', 'data_path': '../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv', 'use_fine_tune': False, 'fix_FE': False, 'use_pair': False, 'use_reg': 0, 'use_BSS': False, 'ntimes': 3, 'kfold': 10, 'batch_size': 16, 'model_name': 'textcnn'}
+Run 3 times of 10fold
+make folder ./results/CoV-AbDab/textcnn/
+model name: textcnn
+=========================================================
+fold 0 as val set
+model_name: textcnn
+model parameters:  85109
+  0%|          | 0/18 [00:00<?, ?it/s]  0%|          | 0/18 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "cov_train.py", line 830, in <module>
+    result = cov_train(config=config)
+  File "cov_train.py", line 677, in cov_train
+    pred = config["model"](para, epi)
+  File "/home/user/anaconda3/envs/graph/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1190, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/user/wanzhang/Transformer4Ab/models/TextCNN.py", line 63, in forward
+    batch_size = batch_antibody_ft.size()[0]
+AttributeError: 'list' object has no attribute 'size'

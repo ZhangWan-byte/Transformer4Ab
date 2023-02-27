@@ -7,6 +7,11 @@ from .FSTransformer import *
 from .masonscnn import *
 from .ensemble import *
 
+from .TextCNN import *
+from .AgFastParapred import *
+from .PIPR import *
+from .ResPPI import *
+
 
 def build_model(config, use_pretrain=False):
     pass
