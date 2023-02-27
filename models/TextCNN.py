@@ -68,10 +68,9 @@ class TextCNN(nn.Module):
         batch_antibody_ft = [seq_pad_clip(i, target_length=self.max_antibody_len) for i in batch_antibody_ft]
         batch_virus_ft = [seq_pad_clip(i, target_length=self.max_virus_len) for i in batch_virus_ft]
 
-        batch_antibody_ft = torch.Tensor([to_onehot(i) for i in batch_antibody_ft]).int().cuda()
-        batch_virus_ft = torch.Tensor([to_onehot(i) for i in batch_virus_ft]).int().cuda()
+        batch_antibody_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_antibody_ft]).float().cuda()
+        batch_virus_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_virus_ft]).float().cuda()
         # (batch, seq_len, embed_size) / (batch, num_inds, dim_input)
-
 
         batch_size = batch_antibody_ft.size()[0]
         antibody_ft = self.text_inception(batch_antibody_ft).view(batch_size, -1)

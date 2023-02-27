@@ -7,9 +7,10 @@ model name: textcnn
 fold 0 as val set
 model_name: textcnn
 model parameters:  85109
-  0%|          | 0/18 [00:00<?, ?it/s]/home/user/wanzhang/Transformer4Ab/models/TextCNN.py:68: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /opt/conda/conda-bld/pytorch_1666642975312/work/torch/csrc/utils/tensor_new.cpp:230.)
+  0%|          | 0/18 [00:00<?, ?it/s]/home/user/wanzhang/Transformer4Ab/models/TextCNN.py:71: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /opt/conda/conda-bld/pytorch_1666642975312/work/torch/csrc/utils/tensor_new.cpp:230.)
   batch_antibody_ft = torch.Tensor([to_onehot(i) for i in batch_antibody_ft]).int().cuda()
   0%|          | 0/18 [00:00<?, ?it/s]
+torch.Size([16, 100])
 Traceback (most recent call last):
   File "cov_train.py", line 830, in <module>
     result = cov_train(config=config)
@@ -17,8 +18,10 @@ Traceback (most recent call last):
     pred = config["model"](para, epi)
   File "/home/user/anaconda3/envs/graph/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1190, in _call_impl
     return forward_call(*input, **kwargs)
-  File "/home/user/wanzhang/Transformer4Ab/models/TextCNN.py", line 71, in forward
-    batch_antibody_ft = self.embedding(batch_antibody_ft)
-  File "/home/user/anaconda3/envs/graph/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1265, in __getattr__
-    raise AttributeError("'{}' object has no attribute '{}'".format(
-AttributeError: 'TextCNN' object has no attribute 'embedding'
+  File "/home/user/wanzhang/Transformer4Ab/models/TextCNN.py", line 77, in forward
+    antibody_ft = self.text_inception(batch_antibody_ft).view(batch_size, -1)
+  File "/home/user/anaconda3/envs/graph/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1190, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/user/wanzhang/Transformer4Ab/models/TextCNN.py", line 26, in forward
+    protein_ft = protein_ft.transpose(1, 2)
+IndexError: Dimension out of range (expected to be in range of [-2, 1], but got 2)
