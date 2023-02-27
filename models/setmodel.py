@@ -143,7 +143,7 @@ class SetTransformer(nn.Module):
                     PMA(dim_hidden, num_heads, num_outputs, ln=ln),
                     SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
                     SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
-                    nn.Linear(dim_hidden, dim_output))
+                    nn.Linear(dim_hidden, dim_hidden))
 
             self.epi_enc = nn.Sequential(
                     ISAB(dim_input, dim_hidden, num_heads, num_inds, ln=ln),
@@ -153,13 +153,13 @@ class SetTransformer(nn.Module):
                     PMA(dim_hidden, num_heads, num_outputs, ln=ln),
                     SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
                     SAB(dim_hidden, dim_hidden, num_heads, ln=ln),
-                    nn.Linear(dim_hidden, dim_output))
+                    nn.Linear(dim_hidden, dim_hidden))
 
         if self.use_coattn==True:
-            self.co_attn = CoAttention(embed_size=dim_output, output_size=dim_output)
+            self.co_attn = CoAttention(embed_size=dim_hidden, output_size=dim_hidden)
 
-        self.output_layer = nn.Sequential(nn.Linear(dim_output, dim_output//2), nn.LeakyReLU(), nn.Dropout(dropout), \
-                                          nn.Linear(dim_output//2, 1), nn.Sigmoid())
+        self.output_layer = nn.Sequential(nn.Linear(dim_hidden, dim_hidden//2), nn.LeakyReLU(), nn.Dropout(dropout), \
+                                          nn.Linear(dim_hidden//2, 1), nn.Sigmoid())
 
 
     def forward(self, para, epi):

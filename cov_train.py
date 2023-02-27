@@ -241,7 +241,6 @@ def prepare_deepaai(config):
     pass
 
 def prepare_pesi(config):
-
     if config["use_fine_tune"]==True:
         config["model_name"] += "_ft"
 
@@ -249,7 +248,7 @@ def prepare_pesi(config):
             config["model_name"] += "_pairPreTrain"
     
     if config["model_name"]=="SetTransformer":
-        model = SetTransformer(dim_input=32, 
+        config["model"] = SetTransformer(dim_input=32, 
                             num_outputs=32, 
                             dim_output=32, 
                             dim_hidden=64, 
@@ -266,17 +265,17 @@ def prepare_pesi(config):
         
     elif config["model_name"]=="SetTransformer_ft":
 
-        model = torch.load("./results/SAbDab/full/seq1_neg0/SetTransformer/model_best.pth")
-        model.train()
+        config["model"] = torch.load("./results/SAbDab/full/seq1_neg0/SetTransformer/model_best.pth")
+        config["model"].train()
 
         if config["fix_FE"]==True:
-            for name, param in model.para_enc.named_parameters():
+            for name, param in config["model"].para_enc.named_parameters():
                 param.requires_grad = False
-            for name, param in model.para_dec.named_parameters():
+            for name, param in config["model"].para_dec.named_parameters():
                 param.requires_grad = False
-            for name, param in model.epi_enc.named_parameters():
+            for name, param in config["model"].epi_enc.named_parameters():
                 param.requires_grad = False
-            for name, param in model.epi_dec.named_parameters():
+            for name, param in config["model"].epi_dec.named_parameters():
                 param.requires_grad = False
 
         epochs = 500
@@ -286,15 +285,17 @@ def prepare_pesi(config):
         
     # elif config["model_name"]=="SetCoAttnTransformer":
     elif config["model_name"]=="pesi":
-        model = SetTransformer(dim_input=32, 
-                               num_outputs=32, 
-                               dim_output=32, 
-                               dim_hidden=64, 
-                               num_inds=6, 
-                               num_heads=4, 
-                               ln=True, 
-                               dropout=0.5, 
-                               use_coattn=True).cuda()
+        config["model"] = SetTransformer(dim_input=32, 
+                                         num_outputs=32, 
+                                         dim_output=32, 
+                                         dim_hidden=64, 
+                                         num_inds=6, 
+                                         num_heads=4, 
+                                         ln=True, 
+                                         dropout=0.5, 
+                                         use_coattn=True, 
+                                         share=False, 
+                                         use_BSS=False).cuda()
         config["epochs"] = 500
         config["lr"] = 6e-5
         config["l2_coef"] = 5e-4
@@ -861,7 +862,8 @@ if __name__=='__main__':
     # model_name = "masonscnn"
     # model_name = "lstm"
     # model_name = "textcnn"
-    model_name = "ag_fast_parapred"
+    # model_name = "ag_fast_parapred"
+    model_name = "pesi"
     
 
     config = {
