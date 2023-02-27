@@ -329,10 +329,10 @@ def pre_train(config):
     if config["use_L2"]==True:
         model_name += "_L2"
 
-    print("model parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
+    print("model parameters: ", sum(p.numel() for p in config["model"].parameters() if p.requires_grad))
 
     criterion = nn.BCELoss() if config["use_pair"]==False else None
-    optimizer = optim.Adam(model.parameters(), lr=config["lr"])
+    optimizer = optim.Adam(config["model"].parameters(), lr=config["lr"])
     # scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=1e-6, last_epoch=-1)
 
     loss_buf = []
@@ -353,12 +353,12 @@ def pre_train(config):
                 optimizer.zero_grad()
 
                 if config["use_pair"]==False:
-                    pred = model(para, epi)
+                    pred = config["model"](para, epi)
                     loss = criterion(pred.view(-1), label.view(-1).cuda())
 
                 if config["use_L2"] == True:
                     param_l2_loss = 0
-                    for name, param in model.named_parameters():
+                    for name, param in config["model"].named_parameters():
                         if 'bias' not in name:
                             param_l2_loss += torch.norm(param, p=2)
                     param_l2_loss = config["l2_coef"] * param_l2_loss
@@ -366,7 +366,7 @@ def pre_train(config):
 
                 loss.backward()
 
-                torch.nn.utils.clip_grad_norm_(model.parameters(), config["clip_norm"])
+                torch.nn.utils.clip_grad_norm_(config["model"].parameters(), config["clip_norm"])
 
                 optimizer.step()
 
@@ -378,9 +378,9 @@ def pre_train(config):
             for i, (para, epi_pos, epi_neg) in enumerate(tqdm(train_loader)):
                 optimizer.zero_grad()
 
-                y_pred_anc = model(para)
-                y_pred_pos = model(epi_pos)
-                y_pred_neg = model(epi_neg)
+                y_pred_anc = config["model"](para)
+                y_pred_pos = config["model"](epi_pos)
+                y_pred_neg = config["model"](epi_neg)
                 
                 if len(y_pred_anc.shape)==3:
                     y_pred_anc = torch.nn.functional.normalize(torch.mean(y_pred_anc, dim=1), p=2, dim=1)
@@ -396,7 +396,7 @@ def pre_train(config):
 
                 if config["use_L2"] == True:
                     param_l2_loss = 0
-                    for name, param in model.named_parameters():
+                    for name, param in config["model"].named_parameters():
                         if 'bias' not in name:
                             param_l2_loss += torch.norm(param, p=2)
                     param_l2_loss = config["l2_coef"] * param_l2_loss
@@ -404,7 +404,7 @@ def pre_train(config):
 
                 loss.backward()
 
-                torch.nn.utils.clip_grad_norm_(model.parameters(), config["clip_norm"])
+                torch.nn.utils.clip_grad_norm_(config["model"].parameters(), config["clip_norm"])
 
                 optimizer.step()
 
@@ -425,14 +425,14 @@ def pre_train(config):
         
             with torch.no_grad():
 
-                model.eval()
+                config["model"].eval()
 
                 preds = []
                 labels = []
                 val_loss_tmp = []
                 for i, (para, epi, label) in enumerate(tqdm(test_loader)):
 
-                    pred = model(para, epi)
+                    pred = config["model"](para, epi)
                     val_loss = criterion(pred.view(-1), label.view(-1).cuda())
 
                     preds.append(pred.detach().cpu().view(-1))
@@ -466,16 +466,16 @@ def pre_train(config):
 #                 torch.save(model, "./results/SAbDab/full/{}/{}/model_best.pth".format(data_type, model_name))
             with torch.no_grad():
 
-                model.eval()
+                config["model"].eval()
 
                 preds = []
                 labels = []
                 val_loss_tmp = []
                 for i, (para1, epi_pos1, epi_neg1) in enumerate(tqdm(test_loader)):
 
-                    y_pred_anc1 = model(para1)
-                    y_pred_pos1 = model(epi_pos1)
-                    y_pred_neg1 = model(epi_neg1)
+                    y_pred_anc1 = config["model"](para1)
+                    y_pred_pos1 = config["model"](epi_pos1)
+                    y_pred_neg1 = config["model"](epi_neg1)
                     
                     if len(y_pred_anc1.shape)==3:
                         y_pred_anc1 = torch.nn.functional.normalize(torch.mean(y_pred_anc1, dim=1), p=2, dim=1)
@@ -491,7 +491,7 @@ def pre_train(config):
 
                     if config["use_L2"] == True:
                         param_l2_loss1 = 0
-                        for name, param in model.named_parameters():
+                        for name, param in config["model"].named_parameters():
                             if 'bias' not in name:
                                 param_l2_loss1 += torch.norm(param, p=2)
                         param_l2_loss1 = config["l2_coef"] * param_l2_loss1
@@ -528,9 +528,9 @@ def pre_train(config):
 
     #     break
     
-    res = evaluate(model_name=config["model_name"], kfold=config["kfold"])
+    # res = evaluate(model_name=config["model_name"], kfold=config["kfold"])
 
-    return res
+    # return res
 
 
 if __name__=='__main__':
@@ -542,9 +542,9 @@ if __name__=='__main__':
     # model_name = "lstm"
     # model_name = "textcnn"
     # model_name = "ag_fast_parapred"
-    model_name = "pipr"
+    # model_name = "pipr"
     # model_name = "resppi"
-    # model_name = "pesi"
+    model_name = "pesi"
 
     config = {
         # data type
