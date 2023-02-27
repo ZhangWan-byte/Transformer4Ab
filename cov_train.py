@@ -522,6 +522,9 @@ def cov_train(config):
             config = prepare_deepaai(config)
         elif config["model_name"]=="pesi":
             config = prepare_pesi(config)
+        else:
+            print("wrong model name")
+            exit()
         
         train_dataset = SeqDataset(data_path=config["data_path"], 
                                    kfold=config["kfold"], 

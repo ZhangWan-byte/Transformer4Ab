@@ -70,6 +70,8 @@ def prepare_pipr(config):
     config["lr"] = 6e-5
     config["l2_coef"] = 5e-4
 
+    return config
+
 def prepare_resppi(config):
     pass
 
@@ -92,11 +94,10 @@ def prepare_pesi(config):
     config["lr"] = 6e-5
     config["l2_coef"] = 5e-4
 
+    return config
+
 
 def pre_train(config):
-        
-    if config["use_pair"]==True:
-        config["model_name"] += "_encoder"
 
     # model name
     if config["model_name"]=="lstm":
@@ -115,6 +116,12 @@ def pre_train(config):
         config = prepare_deepaai(config)
     elif config["model_name"]=="pesi":
         config = prepare_pesi(config)
+    else:
+        print("wrong model_name")
+        exit()
+
+    if config["use_pair"]==True:
+        config["model_name"] += "_encoder"
 
     print("training {} on SAbDab-full".format(config["model_name"]))
     
@@ -448,7 +455,7 @@ def pre_train(config):
 
                 if np.mean(val_loss_tmp)<best_val_loss:
                     best_val_loss = np.mean(val_loss_tmp)
-                    torch.save(model, "./results/SAbDab/full/{}/{}/model_best.pth".format(config["data_type"], config["model_name"]))
+                    torch.save(config["model"], "./results/SAbDab/full/{}/{}/model_best.pth".format(config["data_type"], config["model_name"]))
                     np.save("./results/SAbDab/full/{}/{}/val_acc_best.npy".format(config["data_type"], config["model_name"]), acc)
                     np.save("./results/SAbDab/full/{}/{}/val_f1_best.npy".format(config["data_type"], config["model_name"]), f1)
                     np.save("./results/SAbDab/full/{}/{}/val_auc_best.npy".format(config["data_type"], config["model_name"]), auc)
@@ -497,7 +504,7 @@ def pre_train(config):
 
                 if np.mean(val_loss_tmp)<best_val_loss:
                     best_val_loss = np.mean(val_loss_tmp)
-                    torch.save(model, "./results/SAbDab/full/{}/{}/model_best.pth".format(config["data_type"], config["model_name"]))
+                    torch.save(config["model"], "./results/SAbDab/full/{}/{}/model_best.pth".format(config["data_type"], config["model_name"]))
         else:
             print("Wrong")
             exit()
@@ -505,11 +512,11 @@ def pre_train(config):
 
         torch.cuda.empty_cache()
 
-        model.train()
+        config["model"].train()
 
 
 
-    torch.save(model, "./results/SAbDab/full/{}/{}/model.pth".format(config["data_type"], config["model_name"]))
+    torch.save(config["model"], "./results/SAbDab/full/{}/{}/model.pth".format(config["data_type"], config["model_name"]))
     np.save("./results/SAbDab/full/{}/{}/loss_buf.npy".format(config["data_type"], config["model_name"]), np.array(loss_buf))
     np.save("./results/SAbDab/full/{}/{}/val_loss_buf.npy".format(config["data_type"], config["model_name"]), np.array(val_loss_buf))
     if config["use_pair"]==False:
@@ -576,10 +583,10 @@ if __name__=='__main__':
     print(config)
 
     # training
-    result = pre_train(config=config)
+    pre_train(config=config)
     print("Results dump to: ")
     print("./results/SAbDab/full/{}/{}/result_{}.pkl".format(config["data_type"], config["model_name"]))
-    pickle.dump(result, open("./results/SAbDab/full/{}/{}/result_{}.pkl".format(config["data_type"], config["model_name"]), "wb"))
+    # pickle.dump(result, open("./results/SAbDab/full/{}/{}/result_{}.pkl".format(config["data_type"], config["model_name"]), "wb"))
 
 
     
