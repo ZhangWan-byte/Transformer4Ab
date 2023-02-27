@@ -2,6 +2,7 @@
 import torch.nn.functional as F
 import torch.nn as nn
 import torch
+from .common import *
 
 
 class BasicBlock2D(nn.Module):
@@ -51,6 +52,8 @@ class ResPPI(nn.Module):
         self.out_linear1 = nn.Linear(self.mid_channels * self.amino_ft_dim * 2, self.h_dim)
         self.out_linear2 = nn.Linear(self.h_dim, 1)
 
+        # self.embedding = nn.Embedding(len(vocab), embed_size)
+
         self.res_net = nn.Sequential(
             BasicBlock2D(in_channel=1, out_channel=self.mid_channels, res_connect=True),
             BasicBlock2D(in_channel=self.mid_channels, out_channel=self.mid_channels, res_connect=False),
@@ -66,11 +69,19 @@ class ResPPI(nn.Module):
         :param batch_virus_ft:     tensor    batch, virus_dim
         :return:
         '''
-        batch_size = batch_antibody_onehot_ft.size()[0]
 
+        # batch_virus_onehot_ft = batch_virus_onehot_ft.unsqueeze(1)
+        # batch_antibody_onehot_ft = batch_antibody_onehot_ft.unsqueeze(1)
+
+        batch_antibody_onehot_ft = [seq_pad_clip(i, target_length=100) for i in batch_antibody_onehot_ft]
+        batch_virus_onehot_ft = [seq_pad_clip(i, target_length=100) for i in batch_virus_onehot_ft]
+
+        batch_antibody_onehot_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_antibody_onehot_ft]).float().cuda()
+        batch_virus_onehot_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_virus_onehot_ft]).float().cuda()
+
+        batch_size = batch_antibody_onehot_ft.size()[0]
         batch_virus_onehot_ft = batch_virus_onehot_ft.unsqueeze(1)
         batch_antibody_onehot_ft = batch_antibody_onehot_ft.unsqueeze(1)
-
         virus_ft = self.res_net(batch_virus_onehot_ft)
         antibody_ft = self.res_net(batch_antibody_onehot_ft)
 

@@ -268,7 +268,55 @@ def prepare_pipr(config):
     return config
 
 def prepare_resppi(config):
-    pass
+    if config["use_fine_tune"]==True:
+        config["model_name"] += "_ft"
+
+        if config["use_pair"]==True:
+            config["model_name"] += "_pairPreTrain"
+
+    if config["model_name"]=="resppi":
+        config["model"] = ResPPI(amino_ft_dim=len(vocab), 
+                                    max_antibody_len=100, 
+                                    max_virus_len=100, 
+                                    h_dim=512, 
+                                    dropout=0.1).cuda()
+        config["epochs"] = 100
+        config["lr"] = 1e-4
+        config["l2_coef"] = 5e-4
+        
+    elif config["model_name"]=="resppi_ft":
+        config["model"] = torch.load("./results/SAbDab/full/seq1_neg0/resppi/model_best.pth")
+
+        if config["fix_FE"]==True:
+            for name, param in model.cnnmodule.named_parameters():
+                param.requires_grad = False
+            for name, param in model.cnnmodule2.named_parameters():
+                param.requires_grad = False
+
+
+        config["epochs"] = 500
+        config["lr"] = 1e-4
+        config["l2_coef"] = 5e-4
+        
+    elif config["model_name"]=="resppi_ft_pairPreTrain":
+        
+        encoder = torch.load("./results/SAbDab/full/seq1_neg0/resppi_encoder/model_best.pth")
+        config["model"] = TowerBaseModel(embed_size=32, hidden=128, encoder=encoder, 
+                                         use_two_towers=False, use_coattn=False, fusion=0).cuda()
+        
+        if config["fix_FE"]==True:
+            for name, param in model.encoder.named_parameters():
+                param.requires_grad = False
+        
+        config["epochs"] = 500
+        config["lr"] = 1e-4
+        config["l2_coef"] = 5e-4
+
+    else:
+        print("Error Model Name")
+        exit()
+
+    return config
 
 def prepare_deepaai(config):
     pass
@@ -896,7 +944,8 @@ if __name__=='__main__':
     # model_name = "lstm"
     # model_name = "textcnn"
     # model_name = "ag_fast_parapred"
-    model_name = "pipr"
+    # model_name = "pipr"
+    model_name = "resppi"
     # model_name = "pesi"
     
 
