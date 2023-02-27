@@ -241,7 +241,166 @@ def prepare_deepaai(config):
     pass
 
 def prepare_pesi(config):
-    pass
+
+    if config["use_fine_tune"]==True:
+        config["model_name"] += "_ft"
+
+        if config["use_pair"]==True:
+            config["model_name"] += "_pairPreTrain"
+    
+    if config["model_name"]=="SetTransformer":
+        model = SetTransformer(dim_input=32, 
+                            num_outputs=32, 
+                            dim_output=32, 
+                            dim_hidden=64, 
+                            num_inds=6, 
+                            num_heads=4, 
+                            ln=True, 
+                            dropout=0.5, 
+                            use_coattn=False, 
+                            share=False).cuda()
+        
+        epochs = 500
+        lr = 1e-4
+        l2_coef = 5e-4
+        
+    elif config["model_name"]=="SetTransformer_ft":
+
+        model = torch.load("./results/SAbDab/full/seq1_neg0/SetTransformer/model_best.pth")
+        model.train()
+
+        if config["fix_FE"]==True:
+            for name, param in model.para_enc.named_parameters():
+                param.requires_grad = False
+            for name, param in model.para_dec.named_parameters():
+                param.requires_grad = False
+            for name, param in model.epi_enc.named_parameters():
+                param.requires_grad = False
+            for name, param in model.epi_dec.named_parameters():
+                param.requires_grad = False
+
+        epochs = 500
+        lr = 1e-4
+        l2_coef = 5e-4
+        
+        
+    # elif config["model_name"]=="SetCoAttnTransformer":
+    elif config["model_name"]=="pesi":
+        model = SetTransformer(dim_input=32, 
+                               num_outputs=32, 
+                               dim_output=32, 
+                               dim_hidden=64, 
+                               num_inds=6, 
+                               num_heads=4, 
+                               ln=True, 
+                               dropout=0.5, 
+                               use_coattn=True).cuda()
+        config["epochs"] = 500
+        config["lr"] = 6e-5
+        config["l2_coef"] = 5e-4
+        
+    elif config["model_name"]=="SetCoAttnTransformer_ft":
+        if config["use_BSS"]==False:
+#             model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
+#             model.train()
+
+#             if fix_FE==True:
+#                 for name, param in model.para_enc.named_parameters():
+#                     param.requires_grad = False
+#                 for name, param in model.para_dec.named_parameters():
+#                     param.requires_grad = False
+#                 for name, param in model.epi_enc.named_parameters():
+#                     param.requires_grad = False
+#                 for name, param in model.epi_dec.named_parameters():
+#                     param.requires_grad = False
+            
+#             epochs = 500
+#             lr = 3e-5
+#             l2_coef = 6e-4
+            model = SetTransformer(dim_input=32, 
+                                num_outputs=32, 
+                                dim_output=32, 
+                                dim_hidden=64, 
+                                num_inds=6, 
+                                num_heads=4, 
+                                ln=True, 
+                                dropout=0.5, 
+                                use_coattn=False, 
+                                share=False, 
+                                use_BSS=False).cuda()
+        
+            pt_model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
+        
+            model.para_enc = pt_model.para_enc
+            model.para_dec = pt_model.para_dec
+            model.epi_enc = pt_model.epi_enc
+            model.epi_dec = pt_model.epi_dec
+            model.train()
+        
+            epochs = 500
+            lr = 6e-5
+            l2_coef = 5e-4
+
+        elif config["use_BSS"]==True:
+            print(model_name, config["use_BSS"])
+            model = SetTransformer(dim_input=32, 
+                                num_outputs=32, 
+                                dim_output=32, 
+                                dim_hidden=64, 
+                                num_inds=6, 
+                                num_heads=4, 
+                                ln=True, 
+                                dropout=0.5, 
+                                use_coattn=False, 
+                                share=False, 
+                                use_BSS=True).cuda()
+        
+            # load pre-trained weights
+            pt_model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
+        
+            model.embedding = pt_model.embedding
+            
+            model.para_enc = pt_model.para_enc
+            model.epi_enc = pt_model.epi_enc
+            
+            model.co_attn = pt_model.co_attn
+            
+            model.para_dec = pt_model.para_dec
+            model.epi_dec = pt_model.epi_dec
+            
+            model.output_layer = pt_model.output_layer
+            
+            model.train()
+        
+            # params
+            epochs = 500
+            lr = 6e-5
+            l2_coef = 5e-4
+        else:
+            print("wrong use_BSS!")
+            quit()
+        
+        
+    elif config["model_name"]=="SetCoAttnTransformer_ft_pairPreTrain":
+        
+        encoder = torch.load("./results/SAbDab/full/seq1_neg0/SetTransformer_encoder/model_best.pth")
+        encoder.train()
+        model = TowerBaseModel(embed_size=32, hidden=128, encoder=encoder, use_two_towers=False, mid_coattn=True, use_coattn=True, fusion=1).cuda()
+        
+        if config["fix_FE"]==True:
+            for name, param in model.encoder.named_parameters():
+                param.requires_grad = False
+        
+        epochs = 1500
+        lr = 1e-4 #6e-5
+        l2_coef = 3e-4 #5e-4
+
+    else:
+        print("Error Model Name")
+        exit()
+
+    return config
+
 
 def cov_train(config):
 
@@ -380,151 +539,7 @@ def cov_train(config):
     #         epochs = 200
     #         lr = 6e-5
                     
-    #     elif model_name=="SetTransformer":
-    #         model = SetTransformer(dim_input=32, 
-    #                             num_outputs=32, 
-    #                             dim_output=32, 
-    #                             dim_hidden=64, 
-    #                             num_inds=6, 
-    #                             num_heads=4, 
-    #                             ln=True, 
-    #                             dropout=0.5, 
-    #                             use_coattn=False, 
-    #                             share=False).cuda()
-            
-    #         epochs = 500
-    #         lr = 1e-4
-    #         l2_coef = 5e-4
-            
-    #     elif model_name=="SetTransformer_ft":
-
-    #         model = torch.load("./results/SAbDab/full/seq1_neg0/SetTransformer/model_best.pth")
-    #         model.train()
-
-    #         if config["fix_FE"]==True:
-    #             for name, param in model.para_enc.named_parameters():
-    #                 param.requires_grad = False
-    #             for name, param in model.para_dec.named_parameters():
-    #                 param.requires_grad = False
-    #             for name, param in model.epi_enc.named_parameters():
-    #                 param.requires_grad = False
-    #             for name, param in model.epi_dec.named_parameters():
-    #                 param.requires_grad = False
-
-    #         epochs = 500
-    #         lr = 1e-4
-    #         l2_coef = 5e-4
-            
-            
-    #     elif model_name=="SetCoAttnTransformer":
-    #         model = SetTransformer(dim_input=32, 
-    #                             num_outputs=32, 
-    #                             dim_output=32, 
-    #                             dim_hidden=64, 
-    #                             num_inds=6, 
-    #                             num_heads=4, 
-    #                             ln=True, 
-    #                             dropout=0.5, 
-    #                             use_coattn=True).cuda()
-    #         epochs = 500
-    #         lr = 6e-5
-    #         l2_coef = 5e-4
-            
-    #     elif model_name=="SetCoAttnTransformer_ft":
-    #         if config["use_BSS"]==False:
-    # #             model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
-    # #             model.train()
-
-    # #             if fix_FE==True:
-    # #                 for name, param in model.para_enc.named_parameters():
-    # #                     param.requires_grad = False
-    # #                 for name, param in model.para_dec.named_parameters():
-    # #                     param.requires_grad = False
-    # #                 for name, param in model.epi_enc.named_parameters():
-    # #                     param.requires_grad = False
-    # #                 for name, param in model.epi_dec.named_parameters():
-    # #                     param.requires_grad = False
-                
-    # #             epochs = 500
-    # #             lr = 3e-5
-    # #             l2_coef = 6e-4
-    #             model = SetTransformer(dim_input=32, 
-    #                                 num_outputs=32, 
-    #                                 dim_output=32, 
-    #                                 dim_hidden=64, 
-    #                                 num_inds=6, 
-    #                                 num_heads=4, 
-    #                                 ln=True, 
-    #                                 dropout=0.5, 
-    #                                 use_coattn=False, 
-    #                                 share=False, 
-    #                                 use_BSS=False).cuda()
-            
-    #             pt_model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
-            
-    #             model.para_enc = pt_model.para_enc
-    #             model.para_dec = pt_model.para_dec
-    #             model.epi_enc = pt_model.epi_enc
-    #             model.epi_dec = pt_model.epi_dec
-    #             model.train()
-            
-    #             epochs = 500
-    #             lr = 6e-5
-    #             l2_coef = 5e-4
-
-    #         elif config["use_BSS"]==True:
-    #             print(model_name, config["use_BSS"])
-    #             model = SetTransformer(dim_input=32, 
-    #                                 num_outputs=32, 
-    #                                 dim_output=32, 
-    #                                 dim_hidden=64, 
-    #                                 num_inds=6, 
-    #                                 num_heads=4, 
-    #                                 ln=True, 
-    #                                 dropout=0.5, 
-    #                                 use_coattn=False, 
-    #                                 share=False, 
-    #                                 use_BSS=True).cuda()
-            
-    #             # load pre-trained weights
-    #             pt_model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
-            
-    #             model.embedding = pt_model.embedding
-                
-    #             model.para_enc = pt_model.para_enc
-    #             model.epi_enc = pt_model.epi_enc
-                
-    #             model.co_attn = pt_model.co_attn
-                
-    #             model.para_dec = pt_model.para_dec
-    #             model.epi_dec = pt_model.epi_dec
-                
-    #             model.output_layer = pt_model.output_layer
-                
-    #             model.train()
-            
-    #             # params
-    #             epochs = 500
-    #             lr = 6e-5
-    #             l2_coef = 5e-4
-    #         else:
-    #             print("wrong use_BSS!")
-    #             quit()
-            
-            
-    #     elif model_name=="SetCoAttnTransformer_ft_pairPreTrain":
-            
-    #         encoder = torch.load("./results/SAbDab/full/seq1_neg0/SetTransformer_encoder/model_best.pth")
-    #         encoder.train()
-    #         model = TowerBaseModel(embed_size=32, hidden=128, encoder=encoder, use_two_towers=False, mid_coattn=True, use_coattn=True, fusion=1).cuda()
-            
-    #         if config["fix_FE"]==True:
-    #             for name, param in model.encoder.named_parameters():
-    #                 param.requires_grad = False
-            
-    #         epochs = 1500
-    #         lr = 1e-4 #6e-5
-    #         l2_coef = 3e-4 #5e-4
+    
             
             
     #     elif model_name=="SetModel":
