@@ -50,6 +50,7 @@ class AgFastParapred(nn.Module):
         self.ft_dim = ft_dim
         self.max_virus_len = max_virus_len
         self.max_antibody_len = max_antibody_len
+        self.max_virus_len = max_virus_len
 
         self.h_dim = h_dim
         self.position_coding = position_coding
@@ -92,7 +93,7 @@ class AgFastParapred(nn.Module):
             torch.nn.init.xavier_uniform_(m.weight.data)
             m.bias.data.fill_(0.0)
 
-    def forward(self, batch_antibody_ft, batch_virus_ft, batch_antibody_len, batch_virus_len):
+    def forward(self, batch_antibody_ft, batch_virus_ft):
         '''
         :param batch_antibody_ft:   tensor    batch, max_antibody_len, amino_ft_dim
         :param batch_virus_ft:     tensor    batch, max_virus_len, amino_ft_dim
@@ -109,6 +110,9 @@ class AgFastParapred(nn.Module):
 
         assert batch_antibody_ft.size()[0] == batch_virus_ft.size()[0]
         batch_size = batch_antibody_ft.size()[0]
+
+        batch_antibody_len = torch.tensor([self.max_antibody_len] * batch_size)
+        batch_virus_len = torch.tensor([self.max_antibody_len] * batch_size)
 
         # virus_ft_mat shape ->  batch, amino_ft_dim, amino_max_len
         virus_ft_mat = batch_virus_ft.transpose(1, 2)
@@ -201,4 +205,4 @@ class AgFastParapred(nn.Module):
             mat[:, :, virus_len:] = -1e9
             bias_mat.append(mat)
         bias_mat = torch.cat(bias_mat, dim=0)
-        return 
+        return bias_mat
