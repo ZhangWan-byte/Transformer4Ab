@@ -585,7 +585,7 @@ if __name__=='__main__':
     # training
     pre_train(config=config)
     print("Results dump to: ")
-    print("./results/SAbDab/full/{}/{}/result_{}.pkl".format(config["data_type"], config["model_name"]))
+    print("./results/SAbDab/full/{}/{}/result.pkl".format(config["data_type"], config["model_name"]))
     # pickle.dump(result, open("./results/SAbDab/full/{}/{}/result_{}.pkl".format(config["data_type"], config["model_name"]), "wb"))
 
 
