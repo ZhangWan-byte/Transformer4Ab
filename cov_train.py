@@ -506,34 +506,44 @@ def cov_train(config):
         print("fold {} as val set".format(k_iter))
 
         # model name
-        if model_name=="lstm":
+        if config["model_name"]=="lstm":
             config = prepare_lstm(config)
-        elif model_name=="textcnn":
+        elif config["model_name"]=="textcnn":
             config = prepare_textcnn(config)
-        elif model_name=="masonscnn":
+        elif config["model_name"]=="masonscnn":
             config = prepare_masonscnn(config)
-        elif model_name=="ag_fast_parapred":
+        elif config["model_name"]=="ag_fast_parapred":
             config = prepare_ag_fast_parapred(config)
-        elif model_name=="pipr":
+        elif config["model_name"]=="pipr":
             config = prepare_pipr(config)
-        elif model_name=="resppi":
+        elif config["model_name"]=="resppi":
             config = prepare_resppi(config)
-        elif model_name=="deepaai":
+        elif config["model_name"]=="deepaai":
             config = prepare_deepaai(config)
-        elif model_name=="pesi":
+        elif config["model_name"]=="pesi":
             config = prepare_pesi(config)
         
-        train_dataset = SeqDataset(data_path=config["data_path"], \
-                                kfold=config["kfold"], holdout_fold=k_iter, is_train_test_full="train", \
-                                use_pair=config["use_pair"], balance_samples=False)
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=False, \
-                                                collate_fn=collate_fn)
+        train_dataset = SeqDataset(data_path=config["data_path"], 
+                                   kfold=config["kfold"], 
+                                   holdout_fold=k_iter, 
+                                   is_train_test_full="train", 
+                                   use_pair=config["use_pair"], 
+                                   balance_samples=False)
+        train_loader = torch.utils.data.DataLoader(train_dataset, 
+                                                   batch_size=config["batch_size"], 
+                                                   shuffle=False, 
+                                                   collate_fn=collate_fn)
 
-        test_dataset = SeqDataset(data_path=config["data_path"], \
-                                kfold=config["kfold"], holdout_fold=k_iter, is_train_test_full="test", \
-                                use_pair=config["use_pair"], balance_samples=False)
-        test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False, \
-                                                collate_fn=collate_fn)
+        test_dataset = SeqDataset(data_path=config["data_path"], 
+                                 kfold=config["kfold"], 
+                                 holdout_fold=k_iter, 
+                                 is_train_test_full="test", 
+                                 use_pair=config["use_pair"], 
+                                 balance_samples=False)
+        test_loader = torch.utils.data.DataLoader(test_dataset, 
+                                                  batch_size=1, 
+                                                  shuffle=False, 
+                                                  collate_fn=collate_fn)
 
     #     if model_name=="demo":
     #         model = BiLSTM_demo(embed_size=32, hidden=64, num_layers=1, dropout=0.5, use_pretrain=False).cuda()
@@ -934,12 +944,9 @@ def cov_train(config):
 
 if __name__=='__main__':
 
-    # data = pd.read_csv("../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv")
-
-    # model_name = ["lstm", "textcnn", "masonscnn", "ag_fast_parapred", "pipr", "resppi", "deepaai"]
-
     # set_seed(seed=3407)
     set_seed(seed=42)
+
     # model_name = "masonscnn"
     # model_name = "lstm"
     # model_name = "textcnn"
@@ -947,7 +954,6 @@ if __name__=='__main__':
     # model_name = "pipr"
     model_name = "resppi"
     # model_name = "pesi"
-    
 
     config = {
         # data type
