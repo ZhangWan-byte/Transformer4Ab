@@ -53,6 +53,8 @@ def prepare_lstm(config):
     config["epochs"] = 100
     config["lr"] = 6e-5
 
+    return config
+
 
 def prepare_textcnn(config):
     config["model"] = TextCNN(amino_ft_dim=len(vocab), 
@@ -62,6 +64,8 @@ def prepare_textcnn(config):
                               dropout=0.1).cuda()
     config["epochs"] = 100
     config["lr"] = 1e-4
+
+    return config
 
 def prepare_masonscnn(config):
     config["model"] = MasonsCNN(amino_ft_dim=len(vocab), 
@@ -84,6 +88,8 @@ def prepare_ag_fast_parapred(config):
     config["epochs"] = 100
     config["lr"] = 1e-4
 
+    return config
+
 def prepare_pipr(config):
     config["model"] = PIPR(protein_ft_one_hot_dim=len(vocab)).cuda()
     
@@ -100,6 +106,8 @@ def prepare_resppi(config):
                              dropout=0.1).cuda()
     config["epochs"] = 300
     config["lr"] = 1e-4
+
+    return config
 
 def prepare_deepaai(config):
     pass
