@@ -1,8 +1,11 @@
+import os
+import sys
 import copy
 import pickle
 import random
 import warnings
 warnings.filterwarnings('ignore')
+import argparse
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -42,11 +45,23 @@ def load_data(data_path):
 
 def prepare_lstm(config):
 
-    pass
+    config["model"] = BiLSTM(embed_size=32, 
+                             hidden=64, 
+                             num_layers=1, 
+                             dropout=0.5, 
+                             use_pretrain=False).cuda()
+    config["epochs"] = 100
+    config["lr"] = 6e-5
 
 
 def prepare_textcnn(config):
-    pass
+    config["model"] = TextCNN(amino_ft_dim=len(vocab), 
+                              max_antibody_len=100, 
+                              max_virus_len=100, 
+                              h_dim=512, 
+                              dropout=0.1).cuda()
+    config["epochs"] = 100
+    config["lr"] = 1e-4
 
 def prepare_masonscnn(config):
     config["model"] = MasonsCNN(amino_ft_dim=len(vocab), 
@@ -61,34 +76,45 @@ def prepare_masonscnn(config):
     return config
 
 def prepare_ag_fast_parapred(config):
-    pass
+    config["model"] = AgFastParapred(ft_dim=len(vocab), 
+                                     max_antibody_len=100, 
+                                     max_virus_len=100, 
+                                     h_dim=512, 
+                                     position_coding=True).cuda()
+    config["epochs"] = 100
+    config["lr"] = 1e-4
 
 def prepare_pipr(config):
     config["model"] = PIPR(protein_ft_one_hot_dim=len(vocab)).cuda()
     
-    config["epochs"] = 500
-    config["lr"] = 6e-5
-    config["l2_coef"] = 5e-4
+    config["epochs"] = 300
+    config["lr"] = 1e-4
 
     return config
 
 def prepare_resppi(config):
-    pass
+    config["model"] = ResPPI(amino_ft_dim=len(vocab), 
+                             max_antibody_len=100, 
+                             max_virus_len=100, 
+                             h_dim=512, 
+                             dropout=0.1).cuda()
+    config["epochs"] = 300
+    config["lr"] = 1e-4
 
 def prepare_deepaai(config):
     pass
 
 def prepare_pesi(config):
     config["model"] = SetTransformer(dim_input=32, 
-                        num_outputs=32, 
-                        dim_output=32, 
-                        dim_hidden=128, 
-                        num_inds=6, 
-                        num_heads=4, 
-                        ln=True, 
-                        dropout=0.5, 
-                        use_coattn=True, 
-                        share=False).cuda()
+                                     num_outputs=32, 
+                                     dim_output=32, 
+                                     dim_hidden=128, 
+                                     num_inds=6, 
+                                     num_heads=4, 
+                                     ln=True, 
+                                     dropout=0.5, 
+                                     use_coattn=True, 
+                                     share=False).cuda()
     
     config["epochs"] = 500
     config["lr"] = 6e-5
@@ -538,13 +564,15 @@ if __name__=='__main__':
     # set_seed(seed=3407)
     set_seed(seed=42)
 
-    # model_name = "masonscnn"
-    # model_name = "lstm"
-    # model_name = "textcnn"
-    # model_name = "ag_fast_parapred"
-    # model_name = "pipr"
-    # model_name = "resppi"
-    model_name = "pesi"
+    # # model_name = "masonscnn"
+    # # model_name = "lstm"
+    # # model_name = "textcnn"
+    # # model_name = "ag_fast_parapred"
+    # # model_name = "pipr"
+    # # model_name = "resppi"
+    # model_name = "pesi"
+
+    model_name = sys.argv[1]
 
     config = {
         # data type
