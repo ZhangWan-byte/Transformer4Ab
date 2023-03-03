@@ -4,5 +4,5 @@ for model_name in "${arr[@]}"
 do
     echo "nohup python pre_train.py $model_name > ./logs/log_pretrain_$model_name 2>&1 &"
 
-    nohup python pre_train.py $model_name > ./logs/log_$model_name 2>&1 &
+    nohup python pre_train.py $model_name > ./logs/log_pretrain_$model_name 2>&1 &
 done
