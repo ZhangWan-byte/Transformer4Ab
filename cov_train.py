@@ -288,10 +288,12 @@ def prepare_resppi(config):
         config["model"] = torch.load("./results/SAbDab/full/seq1_neg0/resppi/model_best.pth")
 
         if config["fix_FE"]==True:
-            for name, param in model.cnnmodule.named_parameters():
-                param.requires_grad = False
-            for name, param in model.cnnmodule2.named_parameters():
-                param.requires_grad = False
+            # for name, param in model.cnnmodule.named_parameters():
+            #     param.requires_grad = False
+            # for name, param in model.cnnmodule2.named_parameters():
+            #     param.requires_grad = False
+            print("not implemented")
+            exit()
 
 
         config["epochs"] = 500
@@ -383,45 +385,45 @@ def prepare_pesi(config):
         
     elif config["model_name"]=="pesi_ft":
         if config["use_BSS"]==False:
-#             model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
-#             model.train()
-
-#             if fix_FE==True:
-#                 for name, param in model.para_enc.named_parameters():
-#                     param.requires_grad = False
-#                 for name, param in model.para_dec.named_parameters():
-#                     param.requires_grad = False
-#                 for name, param in model.epi_enc.named_parameters():
-#                     param.requires_grad = False
-#                 for name, param in model.epi_dec.named_parameters():
-#                     param.requires_grad = False
-            
-#             epochs = 500
-#             lr = 3e-5
-#             l2_coef = 6e-4
-            model = SetTransformer(dim_input=32, 
-                                num_outputs=32, 
-                                dim_output=32, 
-                                dim_hidden=64, 
-                                num_inds=6, 
-                                num_heads=4, 
-                                ln=True, 
-                                dropout=0.5, 
-                                use_coattn=False, 
-                                share=False, 
-                                use_BSS=False).cuda()
-        
-            pt_model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
-        
-            model.para_enc = pt_model.para_enc
-            model.para_dec = pt_model.para_dec
-            model.epi_enc = pt_model.epi_enc
-            model.epi_dec = pt_model.epi_dec
+            model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
             model.train()
-        
+
+            if fix_FE==True:
+                for name, param in model.para_enc.named_parameters():
+                    param.requires_grad = False
+                for name, param in model.para_dec.named_parameters():
+                    param.requires_grad = False
+                for name, param in model.epi_enc.named_parameters():
+                    param.requires_grad = False
+                for name, param in model.epi_dec.named_parameters():
+                    param.requires_grad = False
+            
             epochs = 500
             lr = 6e-5
             l2_coef = 5e-4
+            # model = SetTransformer(dim_input=32, 
+            #                     num_outputs=32, 
+            #                     dim_output=32, 
+            #                     dim_hidden=64, 
+            #                     num_inds=6, 
+            #                     num_heads=4, 
+            #                     ln=True, 
+            #                     dropout=0.5, 
+            #                     use_coattn=False, 
+            #                     share=False, 
+            #                     use_BSS=False).cuda()
+        
+            # pt_model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
+        
+            # model.para_enc = pt_model.para_enc
+            # model.para_dec = pt_model.para_dec
+            # model.epi_enc = pt_model.epi_enc
+            # model.epi_dec = pt_model.epi_dec
+            # model.train()
+        
+            # epochs = 500
+            # lr = 6e-5
+            # l2_coef = 5e-4
 
         elif config["use_BSS"]==True:
             print(model_name, config["use_BSS"])
