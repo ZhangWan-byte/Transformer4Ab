@@ -1,0 +1,285 @@
+{'clip_norm': 1, 'data_type': 'seq1_neg0', 'data_path': '../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv', 'use_fine_tune': False, 'fix_FE': False, 'use_pair': False, 'use_reg': 0, 'use_BSS': False, 'ntimes': 3, 'kfold': 10, 'batch_size': 16, 'model_name': 'masonscnn'}
+Run 3 times of 10fold
+make folder ./results/CoV-AbDab/masonscnn/
+model name: masonscnn
+=========================================================
+fold 0 as val set
+model_name: masonscnn
+model parameters:  418817
+  0%|          | 0/18 [00:00<?, ?it/s]/home/user/wanzhang/Transformer4Ab/models/masonscnn.py:86: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /opt/conda/conda-bld/pytorch_1666642975312/work/torch/csrc/utils/tensor_new.cpp:230.)
+  batch_antibody_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_antibody_ft]).float().cuda()
+  6%|▌         | 1/18 [00:01<00:33,  1.96s/it] 83%|████████▎ | 15/18 [00:02<00:00,  9.97it/s]100%|██████████| 18/18 [00:02<00:00,  8.63it/s]
+lr:  0.0001
+Epoch 0: 
+ Train Loss	0.6093 
+ Val Loss	0.6366 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5857 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 138.83it/s]100%|██████████| 18/18 [00:00<00:00, 143.05it/s]
+lr:  0.0001
+Epoch 1: 
+ Train Loss	0.5952 
+ Val Loss	0.6386 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5810 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 83%|████████▎ | 15/18 [00:00<00:00, 140.99it/s]100%|██████████| 18/18 [00:00<00:00, 144.36it/s]
+lr:  0.0001
+Epoch 2: 
+ Train Loss	0.5906 
+ Val Loss	0.6372 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5667 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 138.36it/s]100%|██████████| 18/18 [00:00<00:00, 141.30it/s]
+lr:  0.0001
+Epoch 3: 
+ Train Loss	0.5881 
+ Val Loss	0.6361 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5476 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 83%|████████▎ | 15/18 [00:00<00:00, 140.03it/s]100%|██████████| 18/18 [00:00<00:00, 143.48it/s]
+lr:  0.0001
+Epoch 4: 
+ Train Loss	0.5861 
+ Val Loss	0.6356 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5429 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 135.62it/s]100%|██████████| 18/18 [00:00<00:00, 138.18it/s]
+lr:  0.0001
+Epoch 5: 
+ Train Loss	0.5847 
+ Val Loss	0.6353 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5381 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 131.72it/s]100%|██████████| 18/18 [00:00<00:00, 135.47it/s]
+lr:  0.0001
+Epoch 6: 
+ Train Loss	0.5834 
+ Val Loss	0.6351 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5381 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 134.24it/s]100%|██████████| 18/18 [00:00<00:00, 138.13it/s]
+lr:  0.0001
+Epoch 7: 
+ Train Loss	0.5822 
+ Val Loss	0.6349 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5190 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 134.83it/s]100%|██████████| 18/18 [00:00<00:00, 138.26it/s]
+lr:  0.0001
+Epoch 8: 
+ Train Loss	0.5812 
+ Val Loss	0.6347 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5048 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 67%|██████▋   | 12/18 [00:00<00:00, 119.94it/s]100%|██████████| 18/18 [00:00<00:00, 124.97it/s]
+lr:  0.0001
+Epoch 9: 
+ Train Loss	0.5801 
+ Val Loss	0.6347 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.5048 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 134.53it/s]100%|██████████| 18/18 [00:00<00:00, 138.28it/s]
+lr:  0.0001
+Epoch 10: 
+ Train Loss	0.5791 
+ Val Loss	0.6346 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4905 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 83%|████████▎ | 15/18 [00:00<00:00, 141.51it/s]100%|██████████| 18/18 [00:00<00:00, 145.17it/s]
+lr:  0.0001
+Epoch 11: 
+ Train Loss	0.5780 
+ Val Loss	0.6347 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4714 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 83%|████████▎ | 15/18 [00:00<00:00, 143.02it/s]100%|██████████| 18/18 [00:00<00:00, 146.61it/s]
+lr:  0.0001
+Epoch 12: 
+ Train Loss	0.5768 
+ Val Loss	0.6347 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4714 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 136.44it/s]100%|██████████| 18/18 [00:00<00:00, 140.68it/s]
+lr:  0.0001
+Epoch 13: 
+ Train Loss	0.5757 
+ Val Loss	0.6349 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4714 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 138.76it/s]100%|██████████| 18/18 [00:00<00:00, 141.96it/s]
+lr:  0.0001
+Epoch 14: 
+ Train Loss	0.5744 
+ Val Loss	0.6350 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4667 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 83%|████████▎ | 15/18 [00:00<00:00, 141.17it/s]100%|██████████| 18/18 [00:00<00:00, 144.38it/s]
+lr:  0.0001
+Epoch 15: 
+ Train Loss	0.5731 
+ Val Loss	0.6353 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4667 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 83%|████████▎ | 15/18 [00:00<00:00, 140.06it/s]100%|██████████| 18/18 [00:00<00:00, 140.79it/s]
+lr:  0.0001
+Epoch 16: 
+ Train Loss	0.5718 
+ Val Loss	0.6357 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4667 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 72%|███████▏  | 13/18 [00:00<00:00, 126.68it/s]100%|██████████| 18/18 [00:00<00:00, 132.85it/s]
+lr:  0.0001
+Epoch 17: 
+ Train Loss	0.5704 
+ Val Loss	0.6361 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4619 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 83%|████████▎ | 15/18 [00:00<00:00, 141.60it/s]100%|██████████| 18/18 [00:00<00:00, 144.76it/s]
+lr:  0.0001
+Epoch 18: 
+ Train Loss	0.5688 
+ Val Loss	0.6366 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4524 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 124.66it/s]100%|██████████| 18/18 [00:00<00:00, 125.17it/s]
+lr:  0.0001
+Epoch 19: 
+ Train Loss	0.5672 
+ Val Loss	0.6371 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4333 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 72%|███████▏  | 13/18 [00:00<00:00, 120.32it/s]100%|██████████| 18/18 [00:00<00:00, 125.08it/s]
+lr:  0.0001
+Epoch 20: 
+ Train Loss	0.5655 
+ Val Loss	0.6377 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4238 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 72%|███████▏  | 13/18 [00:00<00:00, 124.94it/s]100%|██████████| 18/18 [00:00<00:00, 131.30it/s]
+lr:  0.0001
+Epoch 21: 
+ Train Loss	0.5637 
+ Val Loss	0.6384 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4381 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 134.73it/s]100%|██████████| 18/18 [00:00<00:00, 134.15it/s]
+lr:  0.0001
+Epoch 22: 
+ Train Loss	0.5618 
+ Val Loss	0.6392 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4381 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 83%|████████▎ | 15/18 [00:00<00:00, 144.52it/s]100%|██████████| 18/18 [00:00<00:00, 147.79it/s]
+lr:  0.0001
+Epoch 23: 
+ Train Loss	0.5596 
+ Val Loss	0.6401 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4429 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 131.37it/s]100%|██████████| 18/18 [00:00<00:00, 133.68it/s]
+lr:  0.0001
+Epoch 24: 
+ Train Loss	0.5574 
+ Val Loss	0.6410 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4381 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 72%|███████▏  | 13/18 [00:00<00:00, 126.56it/s]100%|██████████| 18/18 [00:00<00:00, 130.22it/s]
+lr:  0.0001
+Epoch 25: 
+ Train Loss	0.5551 
+ Val Loss	0.6421 
+ Val Acc	0.6774 
+ Val F1		0.8077 
+ Val AUC	0.4238 
+ Val GMean	0.0000 
+ Val MCC	0.0000
+  0%|          | 0/18 [00:00<?, ?it/s] 56%|█████▌    | 10/18 [00:00<00:00, 120.12it/s]
+Traceback (most recent call last):
+  File "cov_train.py", line 999, in <module>
+    result = cov_train(config=config)
+  File "cov_train.py", line 843, in cov_train
+    pred = config["model"](para, epi)
+  File "/home/user/anaconda3/envs/graph/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1190, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/user/wanzhang/Transformer4Ab/models/masonscnn.py", line 87, in forward
+    batch_virus_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_virus_ft]).float().cuda()
+  File "/home/user/wanzhang/Transformer4Ab/models/masonscnn.py", line 87, in <listcomp>
+    batch_virus_ft = torch.Tensor([to_onehot(i, mode=1) for i in batch_virus_ft]).float().cuda()
+  File "/home/user/wanzhang/Transformer4Ab/utils.py", line 88, in to_onehot
+    li.append(feat)
+KeyboardInterrupt

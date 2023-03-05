@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "cov_train.py", line 963, in <module>
+    model_name = sys.argv[1]
+NameError: name 'sys' is not defined
