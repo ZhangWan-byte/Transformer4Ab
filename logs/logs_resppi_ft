@@ -1,0 +1,8 @@
+use_fine_tune: True
+{'clip_norm': 1, 'data_type': 'seq1_neg0', 'data_path': '../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv', 'use_fine_tune': True, 'fix_FE': False, 'use_pair': False, 'use_reg': 0, 'use_BSS': False, 'ntimes': 3, 'kfold': 10, 'batch_size': 16, 'model_name': 'resppi'}
+Run 3 times of 10fold
+make folder ./results/CoV-AbDab/resppi_ft/
+model name: resppi_ft	use_fine_tune: True
+=========================================================
+fold 0 as val set
+wrong model name

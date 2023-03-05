@@ -491,7 +491,8 @@ def prepare_pesi(config):
 def cov_train(config):
 
     if config["use_fine_tune"]==True:
-        config["model_name"] += "_ft"
+        if "ft" not in config["model_name"]:
+            config["model_name"] += "_ft"
 
         if config["use_pair"]==True:
             config["model_name"] += "_pairPreTrain"
