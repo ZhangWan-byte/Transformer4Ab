@@ -957,8 +957,11 @@ if __name__=='__main__':
     # model_name = "textcnn"
     # model_name = "ag_fast_parapred"
     # model_name = "pipr"
-    model_name = "resppi"
+    # model_name = "resppi"
     # model_name = "pesi"
+
+    model_name = sys.argv[1]
+    use_fine_tune = True if sys.argv[1]=="ft" else False
 
     config = {
         # data type
@@ -967,7 +970,7 @@ if __name__=='__main__':
         "data_path": "../SARS-SAbDab_Shaun/CoV-AbDab_extract.csv", 
 
         # fine-tuning params
-        "use_fine_tune": False,                 # load pre-trained weights as initialisation
+        "use_fine_tune": use_fine_tune,         # load pre-trained weights as initialisation
         "fix_FE": False,                        # only load pre-trained feature extractor weights
         "use_pair": False,                      # whether using pairwise pre-training or not
 
