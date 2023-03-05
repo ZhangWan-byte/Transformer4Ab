@@ -21,11 +21,11 @@ from models import *
 
 def prepare_lstm(config):
 
-    if config["use_fine_tune"]==True:
-        config["model_name"] += "_ft"
+    # if config["use_fine_tune"]==True:
+    #     config["model_name"] += "_ft"
 
-        if config["use_pair"]==True:
-            config["model_name"] += "_pairPreTrain"
+    #     if config["use_pair"]==True:
+    #         config["model_name"] += "_pairPreTrain"
 
     if config["model_name"]=="lstm":
         config["model"] = BiLSTM(embed_size=32, 
@@ -75,11 +75,11 @@ def prepare_lstm(config):
 
 
 def prepare_textcnn(config):
-    if config["use_fine_tune"]==True:
-        config["model_name"] += "_ft"
+    # if config["use_fine_tune"]==True:
+    #     config["model_name"] += "_ft"
 
-        if config["use_pair"]==True:
-            config["model_name"] += "_pairPreTrain"
+    #     if config["use_pair"]==True:
+    #         config["model_name"] += "_pairPreTrain"
 
     if config["model_name"]=="textcnn":
         config["model"] = TextCNN(amino_ft_dim=len(vocab), 
@@ -128,11 +128,11 @@ def prepare_textcnn(config):
 
 def prepare_masonscnn(config):
 
-    if config["use_fine_tune"]==True:
-        config["model_name"] += "_ft"
+    # if config["use_fine_tune"]==True:
+    #     config["model_name"] += "_ft"
 
-        if config["use_pair"]==True:
-            config["model_name"] += "_pairPreTrain"
+    #     if config["use_pair"]==True:
+    #         config["model_name"] += "_pairPreTrain"
 
     if config["model_name"]=="masonscnn":
         config["model"] = MasonsCNN(amino_ft_dim=len(vocab), 
@@ -181,11 +181,11 @@ def prepare_masonscnn(config):
 
 def prepare_ag_fast_parapred(config):
 
-    if config["use_fine_tune"]==True:
-        config["model_name"] += "_ft"
+    # if config["use_fine_tune"]==True:
+    #     config["model_name"] += "_ft"
 
-        if config["use_pair"]==True:
-            config["model_name"] += "_pairPreTrain"
+    #     if config["use_pair"]==True:
+    #         config["model_name"] += "_pairPreTrain"
 
     if config["model_name"]=="ag_fast_parapred":
         config["model"] = AgFastParapred(ft_dim=len(vocab), 
@@ -234,11 +234,11 @@ def prepare_ag_fast_parapred(config):
     return config
 
 def prepare_pipr(config):
-    if config["use_fine_tune"]==True:
-        config["model_name"] += "_ft"
+    # if config["use_fine_tune"]==True:
+    #     config["model_name"] += "_ft"
 
-        if config["use_pair"]==True:
-            config["model_name"] += "_pairPreTrain"
+    #     if config["use_pair"]==True:
+    #         config["model_name"] += "_pairPreTrain"
 
     if config["model_name"]=="pipr":
         config["model"] = PIPR(protein_ft_one_hot_dim=len(vocab)).cuda()
@@ -270,11 +270,11 @@ def prepare_pipr(config):
     return config
 
 def prepare_resppi(config):
-    if config["use_fine_tune"]==True:
-        config["model_name"] += "_ft"
+    # if config["use_fine_tune"]==True:
+    #     config["model_name"] += "_ft"
 
-        if config["use_pair"]==True:
-            config["model_name"] += "_pairPreTrain"
+    #     if config["use_pair"]==True:
+    #         config["model_name"] += "_pairPreTrain"
 
     if config["model_name"]=="resppi":
         config["model"] = ResPPI(amino_ft_dim=len(vocab), 
@@ -326,11 +326,11 @@ def prepare_deepaai(config):
     pass
 
 def prepare_pesi(config):
-    if config["use_fine_tune"]==True:
-        config["model_name"] += "_ft"
+    # if config["use_fine_tune"]==True:
+    #     config["model_name"] += "_ft"
 
-        if config["use_pair"]==True:
-            config["model_name"] += "_pairPreTrain"
+    #     if config["use_pair"]==True:
+    #         config["model_name"] += "_pairPreTrain"
     
     if config["model_name"]=="SetTransformer":
         config["model"] = SetTransformer(dim_input=32, 
@@ -490,16 +490,16 @@ def prepare_pesi(config):
 
 def cov_train(config):
 
-    # if config["use_fine_tune"]==True:
-    #     config["model_name"] += "_ft"
+    if config["use_fine_tune"]==True:
+        config["model_name"] += "_ft"
 
-    #     if config["use_pair"]==True:
-    #         config["model_name"] += "_pairPreTrain"
+        if config["use_pair"]==True:
+            config["model_name"] += "_pairPreTrain"
 
     print("make folder ./results/CoV-AbDab/{}/".format(config["model_name"]))
     os.makedirs("./results/CoV-AbDab/{}/".format(config["model_name"]), exist_ok=True)
 
-    print("model name: {}".format(config["model_name"]))
+    print("model name: {}\tuse_fine_tune: {}".format(config["model_name"], config["use_fine_tune"]))
 
     kfold_labels = []
     kfold_preds = []
