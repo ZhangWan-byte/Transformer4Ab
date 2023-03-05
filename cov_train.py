@@ -510,21 +510,21 @@ def cov_train(config):
         print("fold {} as val set".format(k_iter))
 
         # model name
-        if config["model_name"]=="lstm":
+        if config["model_name"][:-3]=="lstm":
             config = prepare_lstm(config)
-        elif config["model_name"]=="textcnn":
+        elif config["model_name"][:-3]=="textcnn":
             config = prepare_textcnn(config)
-        elif config["model_name"]=="masonscnn":
+        elif config["model_name"][:-3]=="masonscnn":
             config = prepare_masonscnn(config)
-        elif config["model_name"]=="ag_fast_parapred":
+        elif config["model_name"][:-3]=="ag_fast_parapred":
             config = prepare_ag_fast_parapred(config)
-        elif config["model_name"]=="pipr":
+        elif config["model_name"][:-3]=="pipr":
             config = prepare_pipr(config)
-        elif config["model_name"]=="resppi":
+        elif config["model_name"][:-3]=="resppi":
             config = prepare_resppi(config)
-        elif config["model_name"]=="deepaai":
+        elif config["model_name"][:-3]=="deepaai":
             config = prepare_deepaai(config)
-        elif config["model_name"]=="pesi":
+        elif config["model_name"][:-3]=="pesi":
             config = prepare_pesi(config)
         else:
             print("wrong model name")
@@ -963,7 +963,8 @@ if __name__=='__main__':
     # model_name = "pesi"
 
     model_name = sys.argv[1]
-    use_fine_tune = True if sys.argv[1]=="ft" else False
+    use_fine_tune = True if sys.argv[2]=="ft" else False
+    print("use_fine_tune: {}".format(use_fine_tune))
 
     config = {
         # data type
