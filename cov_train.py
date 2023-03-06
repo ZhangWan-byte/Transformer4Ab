@@ -387,22 +387,22 @@ def prepare_pesi(config):
         
     elif config["model_name"]=="pesi_ft":
         if config["use_BSS"]==False:
-            model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
-            model.train()
+            config["model"] = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
+            config["model"].train()
 
-            if fix_FE==True:
-                for name, param in model.para_enc.named_parameters():
+            if config["fix_FE"]==True:
+                for name, param in config["model"].para_enc.named_parameters():
                     param.requires_grad = False
-                for name, param in model.para_dec.named_parameters():
+                for name, param in config["model"].para_dec.named_parameters():
                     param.requires_grad = False
-                for name, param in model.epi_enc.named_parameters():
+                for name, param in config["model"].epi_enc.named_parameters():
                     param.requires_grad = False
-                for name, param in model.epi_dec.named_parameters():
+                for name, param in config["model"].epi_dec.named_parameters():
                     param.requires_grad = False
             
-            epochs = 500
-            lr = 6e-5
-            l2_coef = 5e-4
+            config["epochs"] = 500
+            config["lr"] = 6e-5
+            config["l2_coef"] = 5e-4
             # model = SetTransformer(dim_input=32, 
             #                     num_outputs=32, 
             #                     dim_output=32, 
@@ -428,40 +428,40 @@ def prepare_pesi(config):
             # l2_coef = 5e-4
 
         elif config["use_BSS"]==True:
-            print(model_name, config["use_BSS"])
-            model = SetTransformer(dim_input=32, 
-                                num_outputs=32, 
-                                dim_output=32, 
-                                dim_hidden=64, 
-                                num_inds=6, 
-                                num_heads=4, 
-                                ln=True, 
-                                dropout=0.5, 
-                                use_coattn=False, 
-                                share=False, 
-                                use_BSS=True).cuda()
+            print(config["model_name"], config["use_BSS"])
+            config["model"] = SetTransformer(dim_input=32, 
+                                            num_outputs=32, 
+                                            dim_output=32, 
+                                            dim_hidden=64, 
+                                            num_inds=6, 
+                                            num_heads=4, 
+                                            ln=True, 
+                                            dropout=0.5, 
+                                            use_coattn=False, 
+                                            share=False, 
+                                            use_BSS=True).cuda()
         
             # load pre-trained weights
             pt_model = torch.load("./results/SAbDab/full/seq1_neg0/SetCoAttnTransformer/model_best.pth")
         
-            model.embedding = pt_model.embedding
+            config["model"].embedding = pt_model.embedding
             
-            model.para_enc = pt_model.para_enc
-            model.epi_enc = pt_model.epi_enc
+            config["model"].para_enc = pt_model.para_enc
+            config["model"].epi_enc = pt_model.epi_enc
             
-            model.co_attn = pt_model.co_attn
+            config["model"].co_attn = pt_model.co_attn
             
-            model.para_dec = pt_model.para_dec
-            model.epi_dec = pt_model.epi_dec
+            config["model"].para_dec = pt_model.para_dec
+            config["model"].epi_dec = pt_model.epi_dec
             
-            model.output_layer = pt_model.output_layer
+            config["model"].output_layer = pt_model.output_layer
             
-            model.train()
+            config["model"].train()
         
             # params
-            epochs = 500
-            lr = 6e-5
-            l2_coef = 5e-4
+            config["epochs"] = 500
+            config["lr"] = 6e-5
+            config["l2_coef"] = 5e-4
         else:
             print("wrong use_BSS!")
             quit()
