@@ -537,21 +537,23 @@ def cov_train(config):
                                    is_train_test_full="train", 
                                    use_pair=config["use_pair"], 
                                    balance_samples=False)
+        collate_fn_train = my_collate_fn2 if config["use_aug"]==True else collate_fn
         train_loader = torch.utils.data.DataLoader(train_dataset, 
                                                    batch_size=config["batch_size"], 
                                                    shuffle=False, 
-                                                   collate_fn=collate_fn)
+                                                   collate_fn=collate_fn_train)
 
         test_dataset = SeqDataset(data_path=config["data_path"], 
-                                 kfold=config["kfold"], 
-                                 holdout_fold=k_iter, 
-                                 is_train_test_full="test", 
-                                 use_pair=config["use_pair"], 
-                                 balance_samples=False)
+                                  kfold=config["kfold"], 
+                                  holdout_fold=k_iter, 
+                                  is_train_test_full="test", 
+                                  use_pair=config["use_pair"], 
+                                  balance_samples=False)
+        collate_fn_test = my_collate_fn1 if config["use_aug"]==True else collate_fn
         test_loader = torch.utils.data.DataLoader(test_dataset, 
                                                   batch_size=1, 
                                                   shuffle=False, 
-                                                  collate_fn=collate_fn)
+                                                  collate_fn=collate_fn_test)
 
     #     if model_name=="demo":
     #         model = BiLSTM_demo(embed_size=32, hidden=64, num_layers=1, dropout=0.5, use_pretrain=False).cuda()
@@ -981,6 +983,7 @@ if __name__=='__main__':
         # training params
         "use_reg": 0,                           # regularisation type: 0 - L2; 1 - L1
         "use_BSS": False,                       # Batch Spectral Shrinkage regularisation
+        "use_aug": True,                        # True: my_collate_fn1 for testing, my_collate_fn2 for training
 
         # experiment params
         "ntimes": 3,                            # repeat ntimes of kfold
